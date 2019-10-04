@@ -1,7 +1,8 @@
 package ru.snailmail.backend
 
 data class Message(val id : UID, val from: UID, var text: String) {
-    private var deleted = false
+    var deleted = false
+        private set
     private var edited = false
 
     fun edit(newText: String) {
