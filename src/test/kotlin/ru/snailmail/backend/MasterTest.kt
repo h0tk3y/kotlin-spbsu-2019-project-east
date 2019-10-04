@@ -14,7 +14,7 @@ class MasterTest {
         var failed = false
         try {
             Master.addUser("a")
-        } catch (e : IllegalArgumentException) {
+        } catch (e : Throwable) {
             failed = true
         }
         Assertions.assertTrue(failed)
