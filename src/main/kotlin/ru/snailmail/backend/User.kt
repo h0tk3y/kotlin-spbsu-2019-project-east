@@ -1,34 +1,44 @@
 package ru.snailmail.backend
 
-class User(var name: String) {
+private val AlreadyExists = IllegalArgumentException("Already exists")
+private val DoesNotExist = IllegalArgumentException("Does not exist")
+
+data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
+
+class User(initName: String) {
+    var name: String = initName
+        private set
     val userID = UIDGenerator.generateID()
-    val chatList = mutableListOf<Chat>()
-    val contactsList = mutableListOf<Contact>()
+    val chats = mutableListOf<Chat>()
+    val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
 
-    fun changeName(newName : String) { name = newName }
-
-    inner class Contact {
-        val userID: Int = 0 // Id of the corresponding user
-        val prefferedName: String = name
-        val isBlocked: Boolean = false
-    }
+    fun changeName(newName: String) { name = newName }
 
     fun addChat(chat: Chat) {
-        if (chatList.contains(chat)) {
-            throw IllegalArgumentException("Already exists")
+        if (chats.contains(chat)) {
+            throw AlreadyExists
         }
-        chatList.add(chat)
+        chats.add(chat)
     }
 
     fun deleteChat(chat: Chat) {
-        if (!chatList.contains(chat)) {
-            throw IllegalArgumentException("chat doesn't exist")
+        if (!chats.contains(chat)) {
+            throw DoesNotExist
         }
-        chatList.remove(chat)
+        chats.remove(chat)
     }
 
-    fun AddContact(u: User): Nothing = TODO()
-    fun SetPrefferedName(id: Int, newPrefferedName: String): Nothing = TODO()
-    fun BlockUser(id: Int): Nothing = TODO()
-    fun UnblockUser(id: Int): Nothing = TODO()
+    fun addContact(u: User) {
+        if (contacts.contains(u.userID)) {
+            throw AlreadyExists
+        }
+        contacts[u.userID] = Contact(u.userID, u.name, false)
+    }
+
+    fun deleteContact(u: User) {
+        if (!contacts.contains(u.userID)) {
+            throw DoesNotExist
+        }
+        contacts.remove(u.userID)
+    }
 }
