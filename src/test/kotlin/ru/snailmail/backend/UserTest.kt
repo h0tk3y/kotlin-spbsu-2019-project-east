@@ -11,4 +11,19 @@ class UserTest {
         user.changeName("Bob")
         Assertions.assertTrue(user.name == "Bob")
     }
+    @Test
+    fun testAddChat() {
+        val user = User("Chris")
+        val chat = Chat("First Chat")
+        user.addChat(chat)
+        Assertions.assertTrue(user.chatList[0] == chat)
+        var failed = false
+        try {
+            user.addChat(chat)
+        }  catch (e : IllegalArgumentException) {
+            failed = true
+        }
+        Assertions.assertTrue(failed)
+
+    }
 }
