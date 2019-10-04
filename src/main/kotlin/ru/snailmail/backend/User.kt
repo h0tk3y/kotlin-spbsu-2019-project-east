@@ -1,5 +1,11 @@
 package ru.snailmail.backend
 
 class User (var name : String) {
-    val id = UID(0);
+    val userID = UIDGenerator.generateID()
+    val chatList = emptyList<Chat>()
+    val userList = emptyList<User>() // saved
+
+    fun changeName(newName : String) {
+        name = newName
+    }
 }

@@ -9,6 +9,7 @@ open class Chat (var name : String) {
         name = newName
     }
     open fun searchMessage(s : String) { }
-    open fun printMessage (message : Message) { }
+    open fun printAllMessage (message : Message) { }
+    open fun printTopMessage (message: Message, counter: Int) { }
 
 }
