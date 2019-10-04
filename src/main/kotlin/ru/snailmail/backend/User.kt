@@ -1,4 +1,5 @@
 package ru.snailmail.backend
 
-class User {
+class User (var name : String) {
+    val id = UID(0);
 }
