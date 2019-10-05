@@ -11,7 +11,6 @@ class MasterTest {
     fun testAddingSameUser() {
         Master.addUser("a")
         Master.addUser("b")
-        var failed = false
         Assertions.assertThrows(AlreadyExistsException::class.java) {Master.addUser("a")};
     }
 }

@@ -15,7 +15,7 @@ class UserTest {
     @Test
     fun testAddChat() {
         val user = User("Chris")
-        val chat = Chat("First Chat")
+        val chat = PublicChat("First Chat", user)
         Assertions.assertDoesNotThrow { user.addChat(chat) }
         Assertions.assertEquals(user.chats, mutableListOf(chat))
         Assertions.assertThrows(AlreadyExistsException::class.java) { user.addChat(chat) }
@@ -24,7 +24,7 @@ class UserTest {
     @Test
     fun testDeleteChat() {
         val user = User("Chris")
-        val chat = Chat("First Chat")
+        val chat = PublicChat("First Chat", user)
         Assertions.assertThrows(DoesNotExistException::class.java) { user.deleteChat(chat) }
         user.addChat(chat)
         Assertions.assertDoesNotThrow { user.deleteChat(chat) }
