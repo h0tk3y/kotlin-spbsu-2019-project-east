@@ -13,7 +13,7 @@ object Master {
     fun addUser(userLogin: String) {
         for (user in users) {
             if (user.name == userLogin) {
-                throw IllegalArgumentException()
+                throw AlreadyExistsException("User with login $userLogin already exists")
             }
         }
         users.add(User(userLogin))

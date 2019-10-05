@@ -12,11 +12,6 @@ class MasterTest {
         Master.addUser("a")
         Master.addUser("b")
         var failed = false
-        try {
-            Master.addUser("a")
-        } catch (e : Throwable) {
-            failed = true
-        }
-        Assertions.assertTrue(failed)
+        Assertions.assertThrows(AlreadyExistsException::class.java) {Master.addUser("a")};
     }
 }

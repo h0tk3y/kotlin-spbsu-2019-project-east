@@ -2,7 +2,7 @@ package ru.snailmail.backend
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import java.lang.IllegalArgumentException
+import kotlin.Exception
 
 class UserTest {
     @Test
@@ -18,14 +18,14 @@ class UserTest {
         val chat = Chat("First Chat")
         Assertions.assertDoesNotThrow { user.addChat(chat) }
         Assertions.assertEquals(user.chats, mutableListOf(chat))
-        Assertions.assertThrows(IllegalArgumentException::class.java) { user.addChat(chat) }
+        Assertions.assertThrows(AlreadyExistsException::class.java) { user.addChat(chat) }
     }
 
     @Test
     fun testDeleteChat() {
         val user = User("Chris")
         val chat = Chat("First Chat")
-        Assertions.assertThrows(IllegalArgumentException::class.java) { user.deleteChat(chat) }
+        Assertions.assertThrows(DoesNotExistException::class.java) { user.deleteChat(chat) }
         user.addChat(chat)
         Assertions.assertDoesNotThrow { user.deleteChat(chat) }
         Assertions.assertTrue(user.chats.isEmpty())
@@ -38,7 +38,7 @@ class UserTest {
         Assertions.assertDoesNotThrow { user1.addContact(user2) }
         Assertions.assertEquals(user1.contacts,
             mutableMapOf(user2.userID to Contact(user2.userID, user2.name, false)))
-        Assertions.assertThrows(IllegalArgumentException::class.java) { user1.addContact(user2) }
+        Assertions.assertThrows(AlreadyExistsException::class.java) { user1.addContact(user2) }
     }
 
     @Test
@@ -48,6 +48,6 @@ class UserTest {
         user1.addContact(user2)
         Assertions.assertDoesNotThrow { user1.deleteContact(user2) }
         Assertions.assertEquals(user1.contacts, emptyMap<UID, Contact>())
-        Assertions.assertThrows(IllegalArgumentException::class.java) { user1.deleteContact(user2) }
+        Assertions.assertThrows(DoesNotExistException::class.java) { user1.deleteContact(user2) }
     }
 }

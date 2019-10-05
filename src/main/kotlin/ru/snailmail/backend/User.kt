@@ -1,8 +1,5 @@
 package ru.snailmail.backend
 
-private val AlreadyExists = IllegalArgumentException("Already exists")
-private val DoesNotExist = IllegalArgumentException("Does not exist")
-
 data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
 
 class User(initName: String) {
@@ -16,28 +13,28 @@ class User(initName: String) {
 
     fun addChat(chat: Chat) {
         if (chats.contains(chat)) {
-            throw AlreadyExists
+            throw AlreadyExistsException()
         }
         chats.add(chat)
     }
 
     fun deleteChat(chat: Chat) {
         if (!chats.contains(chat)) {
-            throw DoesNotExist
+            throw DoesNotExistException()
         }
         chats.remove(chat)
     }
 
     fun addContact(u: User) {
         if (contacts.contains(u.userID)) {
-            throw AlreadyExists
+            throw AlreadyExistsException()
         }
         contacts[u.userID] = Contact(u.userID, u.name, false)
     }
 
     fun deleteContact(u: User) {
         if (!contacts.contains(u.userID)) {
-            throw DoesNotExist
+            throw DoesNotExistException()
         }
         contacts.remove(u.userID)
     }
