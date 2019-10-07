@@ -39,4 +39,8 @@ object Master {
         throw DoesNotExistException("User with login $userLogin already exists")
     }
 
+    fun createLichka(user1: User, user2: User) {
+        chats.add(Lichka(user1, user2))
+    }
+
 }
