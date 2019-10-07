@@ -24,6 +24,7 @@ abstract class Chat {
 class PublicChat(var name : String, val god : User) : Chat() {
     init {
         members.add(god)
+        god.addChat(this)
     }
 
     fun addMember(member : User) {
@@ -31,6 +32,7 @@ class PublicChat(var name : String, val god : User) : Chat() {
             throw AlreadyExistsException("$member is already in chat");
         }
         members.add(member)
+        member.addChat(this)
     }
 
     fun changeName(new : String) {

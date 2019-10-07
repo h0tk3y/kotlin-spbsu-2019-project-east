@@ -1,6 +1,7 @@
 package ru.snailmail.backend
 
 class Client {
+    // TODO: request Master using network
     lateinit var u: User
         private set
 
@@ -23,7 +24,11 @@ class Client {
         Master.createLichka(u, user)
     }
 
-    fun inviteUser(c: Chat, user: User) {
-        user.addChat(c)
+    fun createPublicChat(name: String) {
+        Master.createPublicChat(u, name)
+    }
+
+    fun inviteUser(c: PublicChat, user: User) {
+        Master.inviteUser(u, c, user)
     }
 }

@@ -9,7 +9,11 @@ fun main() {
 object Master {
     private val users = mutableListOf<User>()
     private val chats = mutableListOf<Chat>()
-    private var lastId = 0
+
+    fun clear() {
+        users.clear()
+        chats.clear()
+    }
 
     fun register(userLogin: String, userPassword: String) {
         for (user in users) {
@@ -40,8 +44,17 @@ object Master {
     }
 
     fun createLichka(user1: User, user2: User) {
-        // TODO: throw exeption when exists
+        // TODO: throw exception when exists.
         chats.add(Lichka(user1, user2))
     }
 
+    fun createPublicChat(owner: User, name: String) {
+        // TODO: throw exception when exists.
+        chats.add(PublicChat(name, owner))
+    }
+
+    fun inviteUser(chatmember: User, c: PublicChat, newmember: User) {
+        // TODO: throw exception when newmember is already in c or chatmember is not a member of c.
+        c.addMember(newmember)
+    }
 }
