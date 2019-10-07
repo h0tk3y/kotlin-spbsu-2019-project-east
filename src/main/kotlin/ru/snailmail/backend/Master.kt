@@ -16,6 +16,10 @@ object Master {
     }
 
     fun register(userLogin: String, userPassword: String) {
+        // Consider limiting the login/password length?
+        if (userLogin == "") {
+            throw IllegalArgumentException("Empty login")
+        }
         for (user in users) {
             if (user.name == userLogin) {
                 throw AlreadyExistsException("User with login $userLogin already exists")
@@ -45,17 +49,26 @@ object Master {
     }
 
     fun createLichka(user1: User, user2: User) {
-        // TODO: throw exception when exists.
+        if (user1 == user2) {
+            throw AlreadyInTheChatException()
+        }
+        if (user1.chats.filter { it is Lichka }.any { it.members.contains(user2) }) {
+            throw AlreadyExistsException()
+        }
         chats.add(Lichka(user1, user2))
     }
 
     fun createPublicChat(owner: User, name: String) {
-        // TODO: throw exception when exists.
         chats.add(PublicChat(name, owner))
     }
 
     fun inviteUser(chatmember: User, c: PublicChat, newmember: User) {
-        // TODO: throw exception when newmember is already in c or chatmember is not a member of c.
+        if (!chatmember.chats.contains(c)) {
+            throw DoesNotExistException("User not in the chat")
+        }
+        if (newmember.chats.contains(c)) {
+            throw AlreadyInTheChatException()
+        }
         c.addMember(newmember)
     }
 }

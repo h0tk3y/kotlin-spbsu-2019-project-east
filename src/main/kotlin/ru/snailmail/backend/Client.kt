@@ -14,6 +14,9 @@ class Client {
     }
 
     fun sendMessage(c: Chat, text: String) {
+        if (!::u.isInitialized) {
+            throw IllegalAccessException("Not registered")
+        }
         if (!u.chats.contains(c)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
@@ -21,14 +24,23 @@ class Client {
     }
 
     fun createLichka(user: User) {
+        if (!::u.isInitialized) {
+            throw IllegalAccessException("Not registered")
+        }
         Master.createLichka(u, user)
     }
 
     fun createPublicChat(name: String) {
+        if (!::u.isInitialized) {
+            throw IllegalAccessException("Not registered")
+        }
         Master.createPublicChat(u, name)
     }
 
     fun inviteUser(c: PublicChat, user: User) {
+        if (!::u.isInitialized) {
+            throw IllegalAccessException("Not registered")
+        }
         Master.inviteUser(u, c, user)
     }
 }

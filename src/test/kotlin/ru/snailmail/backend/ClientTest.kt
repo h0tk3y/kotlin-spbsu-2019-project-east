@@ -2,11 +2,14 @@ package ru.snailmail.backend
 
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions
 import java.lang.IllegalArgumentException
-import kotlin.Exception
 
 class ClientTest {
+    @BeforeEach
+    private fun clear() = Master.clear()
+
     @Test
     fun testRegister() {
         val client = Client()
@@ -16,26 +19,6 @@ class ClientTest {
                 Master.searchUser("Grisha").password == "my password")
         Assertions.assertThrows(IllegalArgumentException::class.java) {
             client.register("", "password")
-        }
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            client.register("login", "")
-        }
-        // we need to set upper bound for login length
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            client.register("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                "password")
-        }
-        // we need to set upper bound for password length
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            client.register("name", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        }
-        //I think we want to have only eng letters
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            client.register("Вася", "password")
-        }
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            client.register("login", "границы ключ")
         }
     }
 
@@ -58,39 +41,34 @@ class ClientTest {
 
     @Test
     fun testCreateLichka() {
-        val client = Client()
-        val user = User("Sid", "pistol")
-        Assertions.assertThrows(AlreadyInTheChatException::class.java) {client.createLichka(user)}
+        val client = createClient("Sid", "pistol")
+        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client.createLichka(client.u) }
         val user_essa = User("Nancy", "gun")
-        Assertions.assertDoesNotThrow {client.createLichka(user_essa)}
+        Assertions.assertDoesNotThrow { client.createLichka(user_essa) }
+        Assertions.assertThrows(AlreadyExistsException::class.java) { client.createLichka(user_essa) }
     }
 
     @Test
     fun testCreatePublicChat() {
-        val client = Client()
-        val user = User("Cobain", "Rvanina")
-        val chat = PublicChat("chat", user)
-        // not registered
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, "goodby world")}
-        client.register("Cobain", "Rvanina")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, "goodby world")}
-        client.logIn("Cobain", "Rvanina")
-        Assertions.assertDoesNotThrow {client.sendMessage(chat, "goodby world")}
+        val client = createClient("Cobain", "Rvanina")
+        client.createPublicChat("chat")
+        val chat = client.u.chats[0]
+        Assertions.assertDoesNotThrow { client.sendMessage(chat, "goodby world") }
     }
 
     @Test
     fun testSendMessage() {
-        val client = Client()
-        val user = User("Morison", "The End")
-        //TODO
+        // val client = Client()
+        // val user = User("Morison", "The End")
+        // TODO
     }
 
     @Test
     fun testInviteUser() {
-        val client = Client()
-        val admin = User("Mayakovskiy", "Horosho!")
-        val chat = PublicChat("Brodyachaya Sobaka", admin)
-        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client.inviteUser(chat, admin) }
+        val client = createClient("Mayakovskiy", "Horosho!")
+        Master.createPublicChat(client.u, "Brodyachaya Sobaka")
+        val chat = client.u.chats[0] as PublicChat
+        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client.inviteUser(chat, client.u) }
         val user = User("Lilya", "Glass of water")
         Assertions.assertDoesNotThrow { client.inviteUser(chat, user) }
         Assertions.assertTrue(user.chats.contains(chat))
@@ -115,7 +93,6 @@ class ClientTest {
 
     @Test
     fun testPrivateChat() {
-        Master.clear()
         val client1 = createClient(login1, password1)
         val client2 = createClient(login2, password2)
 
@@ -132,15 +109,16 @@ class ClientTest {
 
     @Test
     fun testPublicChat() {
-        Master.clear()
         val client1 = createClient(login1, password1)
         val client2 = createClient(login2, password2)
         val client3 = createClient(login3, password3)
 
         client1.createPublicChat("public chat")
         val chat = client1.u.chats[0] as PublicChat
+        Assertions.assertThrows(DoesNotExistException::class.java) { client2.inviteUser(chat, client3.u) }
         client1.inviteUser(chat, client2.u)
         client1.inviteUser(chat, client3.u)
+        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client1.inviteUser(chat, client2.u) }
 
         client1.sendMessage(chat, text1)
         client2.sendMessage(chat, text2)
