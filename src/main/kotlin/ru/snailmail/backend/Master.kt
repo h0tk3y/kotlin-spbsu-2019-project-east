@@ -19,6 +19,4 @@ object Master {
         users.add(User(userLogin))
     }
 
-
-
 }
