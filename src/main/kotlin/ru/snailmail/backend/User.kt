@@ -2,9 +2,10 @@ package ru.snailmail.backend
 
 data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
 
-class User(initName: String) {
+class User(initName: String, initPassword: String) {
     var name: String = initName
         private set
+    val password: String = initPassword
     val userID = UIDGenerator.generateID()
     val chats = mutableListOf<Chat>()
     val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
