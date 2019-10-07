@@ -15,16 +15,18 @@ class ClientTest {
     val text2 = "hello, kekos"
     val text3 = "hello, abrikos"
 
+    private fun createClient(login: String, password: String): Client {
+        val client = Client()
+        client.register(login, password)
+        client.logIn(login, password)
+        return client
+    }
+
     @Test
     fun testPrivateChat() {
         Master.clear()
-        val client1 = Client()
-        val client2 = Client()
-
-        client1.register(login1, password1)
-        client2.register(login2, password2)
-        client1.logIn(login1, password1)
-        client2.logIn(login2, password2)
+        val client1 = createClient(login1, password1)
+        val client2 = createClient(login2, password2)
 
         client1.createLichka(client2.u)
         Assertions.assertEquals(client1.u.chats.size, 1)
@@ -41,15 +43,9 @@ class ClientTest {
     @Test
     fun testPublicChat() {
         Master.clear()
-        val client1 = Client()
-        val client2 = Client()
-        val client3 = Client()
-        client1.register(login1, password1)
-        client2.register(login2, password2)
-        client3.register(login3, password3)
-        client1.logIn(login1, password1)
-        client2.logIn(login2, password2)
-        client3.logIn(login3, password3)
+        val client1 = createClient(login1, password1)
+        val client2 = createClient(login2, password2)
+        val client3 = createClient(login3, password3)
 
         client1.createPublicChat("public chat")
         client1.inviteUser(client1.u.chats[0] as PublicChat, client2.u)
