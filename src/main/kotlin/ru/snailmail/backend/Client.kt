@@ -12,15 +12,15 @@ class Client {
         u = Master.logIn(login, password)
     }
 
-    fun sendMessage(c: Chat, msg: Message) {
+    fun sendMessage(c: Chat, text: String) {
         if (!u.chats.contains(c)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
-        c.sendMessage(msg)
+        c.sendMessage(Message(UIDGenerator.generateID(), u.userID, text))
     }
 
     fun createLichka(user: User) {
-        Lichka(u, user)
+        Master.createLichka(u, user)
     }
 
     fun inviteUser(c: Chat, user: User) {

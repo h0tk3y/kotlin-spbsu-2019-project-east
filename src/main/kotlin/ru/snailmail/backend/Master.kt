@@ -40,6 +40,7 @@ object Master {
     }
 
     fun createLichka(user1: User, user2: User) {
+        // TODO: throw exeption when exists
         chats.add(Lichka(user1, user2))
     }
 

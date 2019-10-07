@@ -4,7 +4,7 @@ import java.lang.IllegalArgumentException
 
 abstract class Chat {
     protected val chatID = UIDGenerator.generateID()
-    protected val messages = mutableListOf<Message>()
+    val messages = mutableListOf<Message>() // TODO: make private
     protected val members = mutableListOf<User>()
 
     fun sendMessage(message: Message) = messages.add(message)

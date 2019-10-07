@@ -16,5 +16,12 @@ class ClientTest {
         client1.createLichka(client2.u)
         Assertions.assertEquals(client1.u.chats.size, 1)
         Assertions.assertEquals(client2.u.chats.size, 1)
+        val text1 = "hello, memos"
+        val text2 = "hello, kekos"
+        client1.sendMessage(client1.u.chats[0], text1)
+        client2.sendMessage(client1.u.chats[0], text2)
+        Assertions.assertEquals(client1.u.chats[0].messages.size, 2)
+        Assertions.assertEquals(client1.u.chats[0].messages[0].text, text1)
+        Assertions.assertEquals(client1.u.chats[0].messages[1].text, text2)
     }
 }
