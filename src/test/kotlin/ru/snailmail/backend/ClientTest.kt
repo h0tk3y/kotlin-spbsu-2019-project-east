@@ -57,33 +57,32 @@ class ClientTest {
     }
 
     @Test
-    fun testCreateChat() {
+    fun testCreateLichka() {
         val client = Client()
-        val user = User("Sherlock", "violin")
+        val user = User("Sid", "pistol")
+        Assertions.assertThrows(AlreadyInTheChatException::class.java) {client.createLichka(user)}
+        val user_essa = User("Nancy", "gun")
+        Assertions.assertDoesNotThrow {client.createLichka(user_essa)}
+    }
+
+    @Test
+    fun testCreatePublicChat() {
+        val client = Client()
+        val user = User("Cobain", "Rvanina")
         val chat = PublicChat("chat", user)
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.createChat(chat)}
-        client.register("Moriarty", "evil666")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.createChat(chat)}
-        client.logIn("Moriarty", "evil666")
-        Assertions.assertDoesNotThrow {client.createChat(chat)}
-        Assertions.assertTrue(Master.searchUser("Moriarty").chats.contains(chat))
+        // not registered
+        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, "goodby world")}
+        client.register("Cobain", "Rvanina")
+        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, "goodby world")}
+        client.logIn("Cobain", "Rvanina")
+        Assertions.assertDoesNotThrow {client.sendMessage(chat, "goodby world")}
     }
 
     @Test
     fun testSendMessage() {
         val client = Client()
-        val user = User("Sid", "pistol")
-        val chat = PublicChat("chat", user)
-        val msgid = UIDGenerator.generateID()
-        val message = Message(msgid, user.userID, "goodby world")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, message)}
-        client.register("Sid", "pistol")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, message)}
-        client.logIn("Sid", "pistol")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {client.sendMessage(chat, message)}
-        client.createChat(chat)
-        Assertions.assertDoesNotThrow {client.sendMessage(chat, message)}
-        Assertions.assertTrue(Master.searchUser("Sid").chats.find { it == chat }!!.containsMessage(message))
+        val user = User("Morison", "The End")
+        //TODO
     }
 
     @Test
