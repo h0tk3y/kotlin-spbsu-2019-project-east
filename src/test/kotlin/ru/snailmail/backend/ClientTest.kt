@@ -29,15 +29,14 @@ class ClientTest {
         val client2 = createClient(login2, password2)
 
         client1.createLichka(client2.u)
-        Assertions.assertEquals(client1.u.chats.size, 1)
-        Assertions.assertEquals(client2.u.chats.size, 1)
+        val chat = client1.u.chats[0]
 
-        client1.sendMessage(client1.u.chats[0], text1)
-        client2.sendMessage(client2.u.chats[0], text2)
-        Assertions.assertEquals(client1.u.chats, client2.u.chats)
-        Assertions.assertEquals(client1.u.chats[0].messages.size, 2)
-        Assertions.assertEquals(client1.u.chats[0].messages[0].text, text1)
-        Assertions.assertEquals(client1.u.chats[0].messages[1].text, text2)
+        client1.sendMessage(chat, text1)
+        client2.sendMessage(chat, text2)
+        
+        Assertions.assertEquals(client1.u.chats, mutableListOf(chat))
+        Assertions.assertEquals(client2.u.chats, mutableListOf(chat))
+        Assertions.assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2))
     }
 
     @Test
@@ -48,19 +47,17 @@ class ClientTest {
         val client3 = createClient(login3, password3)
 
         client1.createPublicChat("public chat")
-        client1.inviteUser(client1.u.chats[0] as PublicChat, client2.u)
-        client1.inviteUser(client1.u.chats[0] as PublicChat, client3.u)
-        Assertions.assertEquals(client1.u.chats.size, 1)
-        Assertions.assertEquals(client2.u.chats.size, 1)
-        Assertions.assertEquals(client3.u.chats.size, 1)
-        client1.sendMessage(client1.u.chats[0], text1)
-        client2.sendMessage(client1.u.chats[0], text2)
-        client3.sendMessage(client1.u.chats[0], text3)
-        Assertions.assertEquals(client1.u.chats, client2.u.chats)
-        Assertions.assertEquals(client1.u.chats, client3.u.chats)
-        Assertions.assertEquals(client1.u.chats[0].messages.size, 3)
-        Assertions.assertEquals(client1.u.chats[0].messages[0].text, text1)
-        Assertions.assertEquals(client1.u.chats[0].messages[1].text, text2)
-        Assertions.assertEquals(client1.u.chats[0].messages[2].text, text3)
+        val chat = client1.u.chats[0] as PublicChat
+        client1.inviteUser(chat, client2.u)
+        client1.inviteUser(chat, client3.u)
+
+        client1.sendMessage(chat, text1)
+        client2.sendMessage(chat, text2)
+        client3.sendMessage(chat, text3)
+
+        Assertions.assertEquals(client1.u.chats, mutableListOf(chat))
+        Assertions.assertEquals(client2.u.chats, mutableListOf(chat))
+        Assertions.assertEquals(client3.u.chats, mutableListOf(chat))
+        Assertions.assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2, text3))
     }
 }
