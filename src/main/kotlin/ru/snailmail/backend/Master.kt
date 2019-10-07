@@ -45,7 +45,7 @@ object Master {
                 return user
             }
         }
-        throw DoesNotExistException("User with login $userLogin already exists")
+        throw DoesNotExistException("User with login $userLogin doesn't exist")
     }
 
     fun createLichka(user1: User, user2: User) {
