@@ -1,7 +1,9 @@
 package ru.snailmail.backend
 
 class Client {
-    private var u: User? = null
+    // TODO: request Master using network
+    lateinit var u: User
+        private set
 
     fun register(login: String, password: String) {
         Master.register(login, password)
@@ -11,27 +13,22 @@ class Client {
         u = Master.logIn(login, password)
     }
 
-    fun sendMessage(c: Chat, msg: Message) {
-        if (u == null) {
-            throw IllegalArgumentException("User not registered")
-        }
-        if (!u!!.chats.contains(c)) {
+    fun sendMessage(c: Chat, text: String) {
+        if (!u.chats.contains(c)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
-        c.sendMessage(msg)
+        c.sendMessage(Message(UIDGenerator.generateID(), u.userID, text))
     }
 
-    fun createChat(c: Chat) {
-        if (u == null) {
-            throw IllegalArgumentException("User not registered")
-        }
-        u?.addChat(c)
+    fun createLichka(user: User) {
+        Master.createLichka(u, user)
     }
 
-    fun inviteUser(c: Chat, user: User) {
-        if (u == null) {
-            throw IllegalArgumentException("User not registered")
-        }
-        user.addChat(c)
+    fun createPublicChat(name: String) {
+        Master.createPublicChat(u, name)
+    }
+
+    fun inviteUser(c: PublicChat, user: User) {
+        Master.inviteUser(u, c, user)
     }
 }
