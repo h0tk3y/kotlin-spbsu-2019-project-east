@@ -24,7 +24,8 @@ object Master {
         users.add(User(userLogin, userPassword))
     }
 
-    fun logIn(userLogin: String, password: String): User {
+
+    fun logIn(userLogin: String, password: String): User? {
         for (user in users) {
             if (user.name == userLogin) {
                 if (user.password == password) { return user }

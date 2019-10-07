@@ -19,6 +19,9 @@ abstract class Chat {
         }
     }
 
+    fun containsMessage(msg: Message) : Boolean {
+        return messages.contains(msg)
+    }
 }
 
 class PublicChat(var name : String, val god : User) : Chat() {
