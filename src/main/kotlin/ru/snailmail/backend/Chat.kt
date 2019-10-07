@@ -45,5 +45,7 @@ class PublicChat(var name : String, val god : User) : Chat() {
 class Lichka(val first : User, val second: User) : Chat() {
     init {
         members.addAll(listOf(first, second));
+        first.addChat(this)
+        second.addChat(this)
     }
 }
