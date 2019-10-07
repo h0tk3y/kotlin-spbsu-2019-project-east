@@ -19,8 +19,8 @@ class Client {
         c.sendMessage(msg)
     }
 
-    fun createChat(c: Chat) {
-        u.addChat(c)
+    fun createLichka(user: User) {
+        Lichka(u, user)
     }
 
     fun inviteUser(c: Chat, user: User) {

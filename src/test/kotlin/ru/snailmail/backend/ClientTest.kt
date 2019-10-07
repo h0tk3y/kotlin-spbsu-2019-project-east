@@ -13,9 +13,8 @@ class ClientTest {
         client2.register("memos", "239")
         client1.logIn("kekos", "566")
         client2.logIn("memos", "239")
-        val chat = Lichka(client1.u, client2.u)
-        client1.createChat(chat)
-        Assertions.assertEquals(client1.u.chats, mutableListOf(chat))
-        Assertions.assertEquals(client2.u.chats, mutableListOf(chat))
+        client1.createLichka(client2.u)
+        Assertions.assertEquals(client1.u.chats.size, 1)
+        Assertions.assertEquals(client2.u.chats.size, 1)
     }
 }
