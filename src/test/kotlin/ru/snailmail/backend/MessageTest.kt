@@ -9,7 +9,7 @@ import java.lang.IllegalArgumentException
 class MessageTest {
     @Test
     fun testDeletingMessage() {
-        val user = User("James")
+        val user = User("James", "111")
         val message = Message(UIDGenerator.generateID(), user.userID, "Hello, World!")
         message.delete()
         Assertions.assertTrue(message.deleted)
@@ -17,7 +17,7 @@ class MessageTest {
 
     @Test
     fun testEditingMessage() {
-        val user = User("James")
+        val user = User("James", "111")
         val message = Message(UIDGenerator.generateID(), user.userID, "There's typo in this srting.")
         message.edit("There's no typo in this string.")
         Assertions.assertTrue(message.text == "There's no typo in this string.")

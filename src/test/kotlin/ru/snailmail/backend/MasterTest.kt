@@ -7,10 +7,10 @@ import ru.snailmail.backend.*
 import java.lang.IllegalArgumentException
 
 class MasterTest {
+
     @Test
-    fun testAddingSameUser() {
-        Master.addUser("a")
-        Master.addUser("b")
-        Assertions.assertThrows(AlreadyExistsException::class.java) {Master.addUser("a")};
-    }
+    fun testRegister() {}
+
+    @Test
+    fun testLogin() {}
 }
