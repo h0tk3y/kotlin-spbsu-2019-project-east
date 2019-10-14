@@ -40,10 +40,9 @@ object Master {
     }
 
     fun searchUser(userLogin: String): User {
-        for (user in users) {
-            if (user.name == userLogin) {
-                return user
-            }
+        val found = users.find { it.name == userLogin }
+        if (found != null) {
+            return found
         }
         throw DoesNotExistException("User with login $userLogin doesn't exist")
     }
