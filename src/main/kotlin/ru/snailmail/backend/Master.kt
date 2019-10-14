@@ -20,10 +20,8 @@ object Master {
         if (userLogin == "") {
             throw IllegalArgumentException("Empty login")
         }
-        for (user in users) {
-            if (user.name == userLogin) {
-                throw AlreadyExistsException("User with login $userLogin already exists")
-            }
+        if (users.any { it.name == userLogin }) {
+            throw AlreadyExistsException("User with login $userLogin already exists")
         }
         users.add(User(userLogin, userPassword))
     }
