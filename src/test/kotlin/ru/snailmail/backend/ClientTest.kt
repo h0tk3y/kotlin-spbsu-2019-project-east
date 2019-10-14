@@ -15,8 +15,8 @@ class ClientTest {
         val client = Client()
         Assertions.assertDoesNotThrow {client.register("Grisha", "my password")}
         Assertions.assertDoesNotThrow {Master.searchUser("Grisha")}
-        Assertions.assertTrue(Master.searchUser("Grisha").name == "Grisha" &&
-                Master.searchUser("Grisha").password == "my password")
+        Assertions.assertTrue(Master.searchUser("Grisha").data.name == "Grisha" &&
+                Master.searchUser("Grisha").data.password == "my password")
         Assertions.assertThrows(IllegalArgumentException::class.java) {
             client.register("", "password")
         }

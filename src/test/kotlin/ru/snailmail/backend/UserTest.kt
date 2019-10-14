@@ -9,7 +9,7 @@ class UserTest {
     fun testChangeName() {
         val user = User("Alan", "111")
         user.changeName("Bob")
-        Assertions.assertTrue(user.name == "Bob")
+        Assertions.assertTrue(user.data.name == "Bob")
     }
 
     @Test
@@ -34,7 +34,7 @@ class UserTest {
         val user2 = User("memos", "222")
         Assertions.assertDoesNotThrow { user1.addContact(user2) }
         Assertions.assertEquals(user1.contacts,
-            mutableMapOf(user2.userID to Contact(user2.userID, user2.name, false)))
+            mutableMapOf(user2.userID to Contact(user2.userID, user2.data.name, false)))
         Assertions.assertThrows(AlreadyExistsException::class.java) { user1.addContact(user2) }
     }
 
