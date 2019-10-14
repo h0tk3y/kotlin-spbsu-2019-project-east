@@ -36,11 +36,7 @@ object Master {
     }
 
     fun searchUser(userLogin: String): User {
-        val found = users.find { it.name == userLogin }
-        if (found != null) {
-            return found
-        }
-        throw DoesNotExistException("User with login $userLogin doesn't exist")
+        return users.find { it.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
     }
 
     fun sendMessage(user: User, c: Chat, text: String): UID {
