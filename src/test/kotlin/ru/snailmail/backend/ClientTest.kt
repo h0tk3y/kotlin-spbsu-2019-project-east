@@ -58,9 +58,11 @@ class ClientTest {
 
     @Test
     fun testSendMessage() {
-        // val client = Client()
-        // val user = User("Morison", "The End")
-        // TODO
+        val client = createClient("login", "password")
+        client.createPublicChat("chat")
+        val chat = client.u.chats[0]
+        val id = client.sendMessage(chat, text1)
+        Assertions.assertEquals(client.u.chats[0].messages, mutableListOf(Message(id, client.u.userID, text1)))
     }
 
     @Test

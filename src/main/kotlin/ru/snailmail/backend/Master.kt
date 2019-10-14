@@ -48,6 +48,12 @@ object Master {
         throw DoesNotExistException("User with login $userLogin doesn't exist")
     }
 
+    fun sendMessage(user: User, c: Chat, text: String): UID {
+        val id = UIDGenerator.generateID()
+        c.sendMessage(Message(id, user.userID, text))
+        return id
+    }
+
     fun createLichka(user1: User, user2: User) {
         if (user1 == user2) {
             throw AlreadyInTheChatException()

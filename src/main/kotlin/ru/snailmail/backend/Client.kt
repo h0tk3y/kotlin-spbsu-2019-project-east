@@ -13,14 +13,14 @@ class Client {
         u = Master.logIn(login, password)
     }
 
-    fun sendMessage(c: Chat, text: String) {
+    fun sendMessage(c: Chat, text: String): UID {
         if (!::u.isInitialized) {
             throw IllegalAccessException("Not registered")
         }
         if (!u.chats.contains(c)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
-        c.sendMessage(Message(UIDGenerator.generateID(), u.userID, text))
+        return Master.sendMessage(u, c, text)
     }
 
     fun createLichka(user: User) {
