@@ -21,7 +21,7 @@ class ChatTest {
         val chat = Lichka(user1, user2)
         val message = Message(UIDGenerator.generateID() ,user1.userID, "Ping");
         chat.sendMessage(message)
-//        Assertions.assertTrue(message in chat.message)
+        Assertions.assertTrue(message in chat.messages)
 
     }
 }
