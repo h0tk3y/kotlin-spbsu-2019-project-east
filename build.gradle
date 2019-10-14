@@ -13,6 +13,11 @@ ext.jUnitVersion = "5.5.2"
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
+//    implementation("io.ktor:ktor-server-core:$ktor_version")
+//    implementation("io.ktor:ktor-server-netty:$ktor_version")
+//    implementation("io.ktor:ktor-jackson:$ktor_version")
+//    implementation("ch.qos.logback:logback-classic:1.2.3")
+
     testImplementation "org.junit.jupiter:junit-jupiter-api:$jUnitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$jUnitVersion"
 }

@@ -1,4 +1,5 @@
-package ru.snailmail.backend
+package ru.snailmail.frontend
+import ru.snailmail.backend.*
 
 class Client {
     // TODO: request Master using network
