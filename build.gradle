@@ -12,6 +12,7 @@ ext.jUnitVersion = "5.5.2"
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.10.0'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$jUnitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$jUnitVersion"

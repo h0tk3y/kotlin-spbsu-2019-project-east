@@ -1,16 +1,15 @@
 package ru.snailmail.backend
 
 data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
+data class UserData(var name: String, var password: String)
 
 class User(initName: String, initPassword: String) {
-    var name: String = initName
-        private set
-    val password: String = initPassword
+    val data = UserData(initName, initPassword)
     val userID = UIDGenerator.generateID()
     val chats = mutableListOf<Chat>()
     val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
 
-    fun changeName(newName: String) { name = newName }
+    fun changeName(newName: String) { data.name = newName }
 
     fun addChat(chat: Chat) {
         if (chats.contains(chat)) {
@@ -30,7 +29,7 @@ class User(initName: String, initPassword: String) {
         if (contacts.contains(u.userID)) {
             throw AlreadyExistsException()
         }
-        contacts[u.userID] = Contact(u.userID, u.name, false)
+        contacts[u.userID] = Contact(u.userID, u.data.name, false)
     }
 
     fun deleteContact(u: User) {

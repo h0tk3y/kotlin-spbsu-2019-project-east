@@ -20,7 +20,7 @@ object Master {
         if (userLogin == "") {
             throw IllegalArgumentException("Empty login")
         }
-        if (users.any { it.name == userLogin }) {
+        if (users.any { it.data.name == userLogin }) {
             throw AlreadyExistsException("User with login $userLogin already exists")
         }
         users.add(User(userLogin, userPassword))
@@ -28,15 +28,15 @@ object Master {
 
 
     fun logIn(userLogin: String, password: String): User {
-        val user = users.find { it.name == userLogin } ?: throw DoesNotExistException("Wrong login")
-        if (user.password != password) {
+        val user = users.find { it.data.name == userLogin } ?: throw DoesNotExistException("Wrong login")
+        if (user.data.password != password) {
             throw IllegalArgumentException("Wrong password")
         }
         return user
     }
 
     fun searchUser(userLogin: String): User {
-        return users.find { it.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
+        return users.find { it.data.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
     }
 
     fun sendMessage(user: User, c: Chat, text: String): UID {
