@@ -2,7 +2,7 @@ package ru.snailmail.backend
 
 class Client {
     // TODO: request Master using network
-    lateinit var u: User
+    lateinit var user: User
         private set
 
     fun register(login: String, password: String) {
@@ -10,37 +10,31 @@ class Client {
     }
 
     fun logIn(login: String, password: String) {
-        u = Master.logIn(login, password)
+        user = Master.logIn(login, password)
     }
 
     fun sendMessage(c: Chat, text: String): UID {
-        if (!::u.isInitialized) {
+        if (!::user.isInitialized) {
             throw IllegalAccessException("Not registered")
         }
-        if (!u.chats.contains(c)) {
+        if (!user.chats.contains(c)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
-        return Master.sendMessage(u, c, text)
+        return Master.sendMessage(user, c, text)
     }
 
     fun createLichka(user: User) {
-        if (!::u.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        Master.createLichka(u, user)
+        Master.createLichka(this.user, user)
     }
 
     fun createPublicChat(name: String) {
-        if (!::u.isInitialized) {
+        if (!::user.isInitialized) {
             throw IllegalAccessException("Not registered")
         }
-        Master.createPublicChat(u, name)
+        Master.createPublicChat(user, name)
     }
 
     fun inviteUser(c: PublicChat, user: User) {
-        if (!::u.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        Master.inviteUser(u, c, user)
+        Master.inviteUser(this.user, c, user)
     }
 }

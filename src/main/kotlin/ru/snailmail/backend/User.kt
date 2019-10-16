@@ -26,17 +26,17 @@ class User(initName: String, initPassword: String) {
         chats.remove(chat)
     }
 
-    fun addContact(u: User) {
-        if (contacts.contains(u.userID)) {
+    fun addContact(user: User) {
+        if (contacts.contains(user.userID)) {
             throw AlreadyExistsException()
         }
-        contacts[u.userID] = Contact(u.userID, u.name, false)
+        contacts[user.userID] = Contact(user.userID, user.name, false)
     }
 
-    fun deleteContact(u: User) {
-        if (!contacts.contains(u.userID)) {
+    fun deleteContact(user: User) {
+        if (!contacts.contains(user.userID)) {
             throw DoesNotExistException()
         }
-        contacts.remove(u.userID)
+        contacts.remove(user.userID)
     }
 }

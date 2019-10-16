@@ -2,8 +2,8 @@ package ru.snailmail.backend
 
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Assertions.*
 import java.lang.IllegalArgumentException
 
 class ClientTest {
@@ -13,11 +13,11 @@ class ClientTest {
     @Test
     fun testRegister() {
         val client = Client()
-        Assertions.assertDoesNotThrow {client.register("Grisha", "my password")}
-        Assertions.assertDoesNotThrow {Master.searchUser("Grisha")}
-        Assertions.assertTrue(Master.searchUser("Grisha").name == "Grisha" &&
+        assertDoesNotThrow {client.register("Grisha", "my password")}
+        assertDoesNotThrow {Master.searchUser("Grisha")}
+        assertTrue(Master.searchUser("Grisha").name == "Grisha" &&
                 Master.searchUser("Grisha").password == "my password")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
+        assertThrows(IllegalArgumentException::class.java) {
             client.register("", "password")
         }
     }
@@ -25,55 +25,51 @@ class ClientTest {
     @Test
     fun testLogIn() {
         val client = Client()
-        Assertions.assertThrows(DoesNotExistException::class.java) {
+        assertThrows(DoesNotExistException::class.java) {
             client.logIn("Anton", "my password")
         }
         client.register("Anton", "my password")
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             client.logIn("Anton", "not my password")
         }
-        try {
-            client.logIn("Anton", "not my password")
-        } catch (e: IllegalArgumentException) {
-            Assertions.assertEquals(e.message, "Wrong password")
-        }
+        assertEquals(exception.message, "Wrong password")
     }
 
     @Test
     fun testCreateLichka() {
         val client = createClient("Sid", "pistol")
-        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client.createLichka(client.u) }
-        val user_essa = User("Nancy", "gun")
-        Assertions.assertDoesNotThrow { client.createLichka(user_essa) }
-        Assertions.assertThrows(AlreadyExistsException::class.java) { client.createLichka(user_essa) }
+        assertThrows(AlreadyInTheChatException::class.java) { client.createLichka(client.user) }
+        val useressa = User("Nancy", "gun")
+        assertDoesNotThrow { client.createLichka(useressa) }
+        assertThrows(AlreadyExistsException::class.java) { client.createLichka(useressa) }
     }
 
     @Test
     fun testCreatePublicChat() {
         val client = createClient("Cobain", "Rvanina")
         client.createPublicChat("chat")
-        val chat = client.u.chats[0]
-        Assertions.assertDoesNotThrow { client.sendMessage(chat, "goodby world") }
+        val chat = client.user.chats[0]
+        assertDoesNotThrow { client.sendMessage(chat, "goodby world") }
     }
 
     @Test
     fun testSendMessage() {
         val client = createClient("login", "password")
         client.createPublicChat("chat")
-        val chat = client.u.chats[0]
+        val chat = client.user.chats[0]
         val id = client.sendMessage(chat, text1)
-        Assertions.assertEquals(client.u.chats[0].messages, mutableListOf(Message(id, client.u.userID, text1)))
+        assertEquals(client.user.chats[0].messages, mutableListOf(Message(id, client.user.userID, text1)))
     }
 
     @Test
     fun testInviteUser() {
         val client = createClient("Mayakovskiy", "Horosho!")
-        Master.createPublicChat(client.u, "Brodyachaya Sobaka")
-        val chat = client.u.chats[0] as PublicChat
-        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client.inviteUser(chat, client.u) }
+        Master.createPublicChat(client.user, "Brodyachaya Sobaka")
+        val chat = client.user.chats[0] as PublicChat
+        assertThrows(AlreadyInTheChatException::class.java) { client.inviteUser(chat, client.user) }
         val user = User("Lilya", "Glass of water")
-        Assertions.assertDoesNotThrow { client.inviteUser(chat, user) }
-        Assertions.assertTrue(user.chats.contains(chat))
+        assertDoesNotThrow { client.inviteUser(chat, user) }
+        assertTrue(user.chats.contains(chat))
     }
 
     val login1 = "kekos"
@@ -98,15 +94,15 @@ class ClientTest {
         val client1 = createClient(login1, password1)
         val client2 = createClient(login2, password2)
 
-        client1.createLichka(client2.u)
-        val chat = client1.u.chats[0]
+        client1.createLichka(client2.user)
+        val chat = client1.user.chats[0]
 
         client1.sendMessage(chat, text1)
         client2.sendMessage(chat, text2)
         
-        Assertions.assertEquals(client1.u.chats, mutableListOf(chat))
-        Assertions.assertEquals(client2.u.chats, mutableListOf(chat))
-        Assertions.assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2))
+        assertEquals(client1.user.chats, mutableListOf(chat))
+        assertEquals(client2.user.chats, mutableListOf(chat))
+        assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2))
     }
 
     @Test
@@ -116,19 +112,19 @@ class ClientTest {
         val client3 = createClient(login3, password3)
 
         client1.createPublicChat("public chat")
-        val chat = client1.u.chats[0] as PublicChat
-        Assertions.assertThrows(DoesNotExistException::class.java) { client2.inviteUser(chat, client3.u) }
-        client1.inviteUser(chat, client2.u)
-        client1.inviteUser(chat, client3.u)
-        Assertions.assertThrows(AlreadyInTheChatException::class.java) { client1.inviteUser(chat, client2.u) }
+        val chat = client1.user.chats[0] as PublicChat
+        assertThrows(DoesNotExistException::class.java) { client2.inviteUser(chat, client3.user) }
+        client1.inviteUser(chat, client2.user)
+        client1.inviteUser(chat, client3.user)
+        assertThrows(AlreadyInTheChatException::class.java) { client1.inviteUser(chat, client2.user) }
 
         client1.sendMessage(chat, text1)
         client2.sendMessage(chat, text2)
         client3.sendMessage(chat, text3)
 
-        Assertions.assertEquals(client1.u.chats, mutableListOf(chat))
-        Assertions.assertEquals(client2.u.chats, mutableListOf(chat))
-        Assertions.assertEquals(client3.u.chats, mutableListOf(chat))
-        Assertions.assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2, text3))
+        assertEquals(client1.user.chats, mutableListOf(chat))
+        assertEquals(client2.user.chats, mutableListOf(chat))
+        assertEquals(client3.user.chats, mutableListOf(chat))
+        assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2, text3))
     }
 }
