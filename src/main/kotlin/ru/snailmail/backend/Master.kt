@@ -1,9 +1,20 @@
 package ru.snailmail.backend
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 
-fun main() {
-    val login = "boryan"
-    val password = "11111111"
-    Master.register(login, password)
+fun main(args: Array<String>) {
+    val server = embeddedServer(Netty, port = 8080) {
+        routing {
+            get("/") {
+                call.respondText("west — lohi!", ContentType.Text.Plain)
+            }
+        }
+    }
+    server.start(wait = true)
 }
 
 object Master {
