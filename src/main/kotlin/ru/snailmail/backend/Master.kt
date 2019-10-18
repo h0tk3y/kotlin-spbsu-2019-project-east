@@ -42,6 +42,10 @@ object Master {
         return users.find { it.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
     }
 
+    fun searchUserById(id: Int): User? {
+        return users.find { it.userID.id.toInt() == id }
+    }
+
     fun sendMessage(user: User, c: Chat, text: String): UID {
         val id = UIDGenerator.generateID()
         c.sendMessage(Message(id, user.userID, text))
@@ -50,10 +54,10 @@ object Master {
 
     fun createLichka(user1: User, user2: User) {
         if (user1 == user2) {
-            throw AlreadyInTheChatException()
+            throw AlreadyInTheChatException("User is already in the chat")
         }
         if (user1.chats.filter { it is Lichka }.any { it.members.contains(user2) }) {
-            throw AlreadyExistsException()
+            throw AlreadyExistsException("You already have a chat")
         }
         chats.add(Lichka(user1, user2))
     }
@@ -67,8 +71,14 @@ object Master {
             throw DoesNotExistException("User not in the chat")
         }
         if (newmember.chats.contains(c)) {
-            throw AlreadyInTheChatException()
+            throw AlreadyInTheChatException("User is already in the chat")
         }
         c.addMember(newmember)
+    }
+
+    //TODO we need to decide how do we store our hashes and do we store them at all
+    fun getLoginByHash(hash: Int): String {
+        if (hash == 1) return "Anton"
+        return "Im"
     }
 }
