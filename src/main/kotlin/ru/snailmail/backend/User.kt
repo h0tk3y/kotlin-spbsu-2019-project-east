@@ -1,5 +1,7 @@
 package ru.snailmail.backend
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
+
 data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
 
 class User(initName: String, initPassword: String) {
@@ -7,7 +9,7 @@ class User(initName: String, initPassword: String) {
         private set
     val password: String = initPassword
     val userID = UIDGenerator.generateID()
-    val chats = mutableListOf<Chat>()
+    @JsonManagedReference val chats = mutableListOf<Chat>()
     val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
 
     fun changeName(newName: String) { name = newName }

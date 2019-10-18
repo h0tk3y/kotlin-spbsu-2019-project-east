@@ -1,11 +1,16 @@
 package ru.snailmail.backend
 
+import com.fasterxml.jackson.annotation.JsonBackReference
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import java.lang.IllegalArgumentException
+
 
 abstract class Chat {
     protected val chatID = UIDGenerator.generateID()
     val messages = mutableListOf<Message>() // TODO: make private
-    val members = mutableListOf<User>() // TODO: make private
+    @JsonBackReference val members = mutableListOf<User>() // TODO: make private
 
     fun sendMessage(message: Message) = messages.add(message)
 
@@ -47,9 +52,10 @@ class PublicChat(var name : String, val god : User) : Chat() {
     }
 }
 
-class Lichka(val first : User, val second: User) : Chat() {
+
+class Lichka(@JsonBackReference val first : User, @JsonBackReference val second: User) : Chat() {
     init {
-        members.addAll(listOf(first, second));
+        members.addAll(listOf(first, second))
         first.addChat(this)
         second.addChat(this)
     }

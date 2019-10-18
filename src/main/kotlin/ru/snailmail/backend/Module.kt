@@ -53,5 +53,42 @@ fun Application.module() {
             }
             call.respond(UserToken(ret.name, ret.password))
         }
+
+        post("/createLichka") {
+            val string = call.receive<String>()
+            val params = string.split(',', ' ').filter { it.isNotEmpty() }
+            if (params.size == 9 && params[2].toIntOrNull() != null && params[5].toIntOrNull() != null &&
+                                                                                params[8].toIntOrNull() != null) {
+                val loginHash = params[2].toInt()
+                val passwordHash = params[5].toInt()
+                val invitedId = params[8].toInt()
+                val fstUser: User
+                val sndUser: User
+                try {
+                    fstUser = Master.searchUser(Master.getLoginByHash(loginHash))
+                } catch (e: DoesNotExistException) {
+                    call.respondText(e.message!! + '\n')
+                    return@post
+                }
+                if (Master.searchUserById(invitedId) == null) {
+                    call.respondText("Invited user doesn't exist\n")
+                    return@post
+                }
+                sndUser = Master.searchUserById(invitedId)!!
+                try {
+                    Master.createLichka(fstUser, sndUser)
+                } catch (e: AlreadyInTheChatException) {
+                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                    return@post
+                } catch (e: AlreadyExistsException) {
+                    call.respond(HttpStatusCode.Conflict,
+                        mapOf("error" to e.message))
+                    return@post
+                }
+                call.respondText("OK\n")
+            } else {
+                call.respondText("Incorrect format\n")
+            }
+        }
     }
 }
