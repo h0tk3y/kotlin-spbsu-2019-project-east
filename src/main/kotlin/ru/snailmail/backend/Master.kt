@@ -1,24 +1,16 @@
 package ru.snailmail.backend
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 
 fun main(args: Array<String>) {
     val server = embeddedServer(Netty, port = 8080) {
-        routing {
-            get("/") {
-                call.respondText("west — lohi!", ContentType.Text.Plain)
-            }
-        }
+        module()
     }
     server.start(wait = true)
 }
 
 object Master {
-    private val users = mutableListOf<User>()
+    val users = mutableListOf<User>()
     private val chats = mutableListOf<Chat>()
 
     fun clear() {
