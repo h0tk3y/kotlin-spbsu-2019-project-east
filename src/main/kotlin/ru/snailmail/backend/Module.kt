@@ -16,6 +16,15 @@ private val objectMapper = jacksonObjectMapper()
 
 data class CreateLichkaRequest(val token: String, val invitedId: String)
 
+data class SendMessageRequest(val token: String, val chatId: String, val text: String)
+
+data class TokenRequest(val token: String)
+
+fun userByToken(token: String): User {
+    val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
+    return Master.findUserById(userId) ?: throw IllegalAccessException()
+}
+
 fun Application.module() {
     install(ContentNegotiation) {
         jackson {
@@ -24,6 +33,7 @@ fun Application.module() {
     }
 
     install(Routing) {
+        // TODO: fix exceptions handling.
         get("/") {
             call.respondText("west — lohi!", ContentType.Text.Plain)
         }
@@ -31,48 +41,60 @@ fun Application.module() {
             call.respondText { objectMapper.writeValueAsString(Master.users) + "\n" }
         }
         post("/register") {
-            val creds = call.receive<UserPasswordCredential>()
             try {
-                Master.register(creds)
+                val creds = call.receive<UserPasswordCredential>()
+                val userId = Master.register(creds)
+                call.respondText("User id: $userId\n")
             } catch (e: AlreadyExistsException) {
                 call.respond(
                     HttpStatusCode.Conflict,
                     mapOf("error" to "User with this login already exists")
                 )
             }
-            call.respondText("OK\n")
         }
         post("/login") {
-            val creds = call.receive<UserPasswordCredential>()
             try {
+                val creds = call.receive<UserPasswordCredential>()
                 val user = Master.logIn(creds)
                 val token = JwtConfig.makeToken(user.userID, creds)
                 call.respondText("Your token: $token\n")
             } catch (e: IllegalArgumentException) {
                 call.respondText("ERROR\n")
-                return@post
             } catch (e: DoesNotExistException) {
                 call.respond(HttpStatusCode.Conflict,
                     mapOf("error" to "Wrong login"))
-                return@post
             }
         }
         post("/createLichka") {
-            val params = call.receive<CreateLichkaRequest>()
-            log.info("params: $params")
-            val token = params.token
-            val fstUser: User
-            val sndUser: User
             try {
-                sndUser = Master.searchUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
-                val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
-                fstUser = Master.searchUserById(userId) ?: throw IllegalAccessException()
-                Master.createLichka(fstUser, sndUser)
+                val params = call.receive<CreateLichkaRequest>()
+                val sndUser = Master.findUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
+                val fstUser = userByToken(params.token)
+                val chatId = Master.createLichka(fstUser, sndUser)
+                call.respondText("LichkaId: $chatId\n")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
-                return@post
             }
-            call.respondText("OK\n")
+        }
+        post("/sendMessage") {
+            try {
+                val params = call.receive<SendMessageRequest>()
+                val user = userByToken(params.token)
+                val chat = Master.findChatById(params.chatId.toInt()) ?: throw java.lang.IllegalArgumentException()
+                val msgId = Master.sendMessage(user, chat, params.text)
+                call.respondText("Message id: $msgId\n")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+            }
+        }
+        post("/showChats") {
+            try {
+                val params = call.receive<TokenRequest>()
+                val user = userByToken(params.token)
+                call.respondText(objectMapper.writeValueAsString(user.chats) + "\n")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+            }
         }
     }
 }

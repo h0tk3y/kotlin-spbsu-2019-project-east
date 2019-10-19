@@ -8,7 +8,7 @@ import java.lang.IllegalArgumentException
 
 
 abstract class Chat {
-    protected val chatID = UIDGenerator.generateID()
+    val chatID = UIDGenerator.generateID()
     val messages = mutableListOf<Message>() // TODO: make private
     @JsonBackReference val members = mutableListOf<User>() // TODO: make private
 

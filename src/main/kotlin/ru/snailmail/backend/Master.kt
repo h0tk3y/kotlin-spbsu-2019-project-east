@@ -19,7 +19,7 @@ object Master {
         chats.clear()
     }
 
-    fun register(creds: UserPasswordCredential) {
+    fun register(creds: UserPasswordCredential): UID {
         // Consider limiting the login/password length?
         if (creds.name == "") {
             throw IllegalArgumentException("Empty login")
@@ -27,7 +27,9 @@ object Master {
         if (users.any { it.name == creds.name }) {
             throw AlreadyExistsException("User with login ${creds.name} already exists")
         }
-        users.add(User(creds.name, creds.password))
+        val user = User(creds.name, creds.password)
+        users.add(user)
+        return user.userID
     }
 
 
@@ -39,12 +41,16 @@ object Master {
         return user
     }
 
-    fun searchUser(userLogin: String): User {
+    fun findUser(userLogin: String): User {
         return users.find { it.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
     }
 
-    fun searchUserById(id: Int): User? {
-        return users.find { it.userID.id.toInt() == id }
+    fun findUserById(id: Int): User? {
+        return users.find { it.userID.id == id.toLong() }
+    }
+
+    fun findChatById(id: Int): Chat? {
+        return chats.find { it.chatID.id == id.toLong() }
     }
 
     fun sendMessage(user: User, c: Chat, text: String): UID {
@@ -53,18 +59,22 @@ object Master {
         return id
     }
 
-    fun createLichka(user1: User, user2: User) {
+    fun createLichka(user1: User, user2: User): UID {
         if (user1 == user2) {
             throw AlreadyInTheChatException("User is already in the chat")
         }
         if (user1.chats.filterIsInstance<Lichka>().any { it.members.contains(user2) }) {
             throw AlreadyExistsException("You already have a chat")
         }
-        chats.add(Lichka(user1, user2))
+        val lichka = Lichka(user1, user2)
+        chats.add(lichka)
+        return lichka.chatID
     }
 
-    fun createPublicChat(owner: User, name: String) {
-        chats.add(PublicChat(name, owner))
+    fun createPublicChat(owner: User, name: String): UID {
+        val chat = PublicChat(name, owner)
+        chats.add(chat)
+        return chat.chatID
     }
 
     fun inviteUser(chatmember: User, c: PublicChat, newmember: User) {
