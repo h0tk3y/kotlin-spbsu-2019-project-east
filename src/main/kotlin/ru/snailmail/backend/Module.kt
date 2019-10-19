@@ -30,24 +30,23 @@ fun Application.module() {
         // TODO: fix get -> post.
         get("/register") {
             val creds = call.request.queryParameters
-            val name = creds["name"] ?: throw IllegalArgumentException()
-            val password = creds["password"] ?: throw IllegalArgumentException()
             try {
+                val name = creds["name"] ?: throw IllegalArgumentException()
+                val password = creds["password"] ?: throw IllegalArgumentException()
                 Master.register(UserPasswordCredential(name, password))
             } catch (e: AlreadyExistsException) {
                 call.respond(HttpStatusCode.Conflict,
-                    mapOf("error" to "User with login $name already exists"))
+                    mapOf("error" to "User with this login already exists"))
             }
             call.respondText("OK")
         }
         get("/login") {
             val creds = call.request.queryParameters
-            val user: User
             try {
                 val name = creds["name"] ?: throw IllegalArgumentException()
                 val password = creds["password"] ?: throw IllegalArgumentException()
                 val userCreds = UserPasswordCredential(name, password)
-                user = Master.logIn(userCreds)
+                val user = Master.logIn(userCreds)
                 val token = JwtConfig.makeToken(user.userID, userCreds)
                 call.respondText("Your token: $token")
             } catch (e: IllegalArgumentException) {
