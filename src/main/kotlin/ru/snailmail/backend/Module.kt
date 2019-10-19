@@ -5,13 +5,16 @@ import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.request.receive
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.auth.*
 import io.ktor.features.ContentNegotiation
 import io.ktor.jackson.jackson
-import java.lang.IllegalArgumentException
+import kotlin.IllegalArgumentException
 
 private val objectMapper = jacksonObjectMapper()
+
+data class CreateLichkaRequest(val token: String, val invitedId: String)
 
 fun Application.module() {
     install(ContentNegotiation) {
@@ -25,75 +28,54 @@ fun Application.module() {
             call.respondText("west — lohi!", ContentType.Text.Plain)
         }
         get("/users") {
-            call.respondText { objectMapper.writeValueAsString(Master.users) }
+            call.respondText { objectMapper.writeValueAsString(Master.users) + "\n" }
         }
-        // TODO: fix get -> post.
-        get("/register") {
-            val creds = call.request.queryParameters
+        post("/register") {
+            val creds = call.receive<UserPasswordCredential>()
             try {
-                val name = creds["name"] ?: throw IllegalArgumentException()
-                val password = creds["password"] ?: throw IllegalArgumentException()
-                Master.register(UserPasswordCredential(name, password))
+                Master.register(creds)
             } catch (e: AlreadyExistsException) {
-                call.respond(HttpStatusCode.Conflict,
-                    mapOf("error" to "User with this login already exists"))
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    mapOf("error" to "User with this login already exists")
+                )
             }
-            call.respondText("OK")
+            call.respondText("OK\n")
         }
-        get("/login") {
-            val creds = call.request.queryParameters
+        post("/login") {
+            val creds = call.receive<UserPasswordCredential>()
             try {
-                val name = creds["name"] ?: throw IllegalArgumentException()
-                val password = creds["password"] ?: throw IllegalArgumentException()
+                val name = creds.name
+                val password = creds.password
                 val userCreds = UserPasswordCredential(name, password)
                 val user = Master.logIn(userCreds)
                 val token = JwtConfig.makeToken(user.userID, userCreds)
-                call.respondText("Your token: $token")
+                call.respondText("Your token: $token\n")
             } catch (e: IllegalArgumentException) {
-                call.respondText("ERROR")
-                return@get
+                call.respondText("ERROR\n")
+                return@post
             } catch (e: DoesNotExistException) {
                 call.respond(HttpStatusCode.Conflict,
                     mapOf("error" to "Wrong login"))
-                return@get
+                return@post
             }
         }
-
-        get("/createLichka") {
-            val params = call.request.queryParameters
-            if (params.contains("token") && params.contains("id")) {
-                val token = params["token"]
-                val invitedId = params["id"]!!.toInt()
-                val fstUser: User
-                val sndUser: User
-                try {
-                    val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
-                    fstUser = Master.searchUserById(userId) ?: throw IllegalAccessException()
-                } catch (e: Exception) {
-                    call.respondText(e.message!! + '\n')
-                    return@get
-                }
-                if (Master.searchUserById(invitedId) == null) {
-                    call.respondText("Invited user doesn't exist\n")
-                    return@get
-                }
-                sndUser = Master.searchUserById(invitedId)!!
-                try {
-                    Master.createLichka(fstUser, sndUser)
-                } catch (e: AlreadyInTheChatException) {
-                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
-                    return@get
-                } catch (e: AlreadyExistsException) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        mapOf("error" to e.message)
-                    )
-                    return@get
-                }
-                call.respondText("OK\n")
-            } else {
-                call.respondText("Incorrect format\n")
+        post("/createLichka") {
+            val params = call.receive<CreateLichkaRequest>()
+            log.info("params: $params")
+            val token = params.token
+            val fstUser: User
+            val sndUser: User
+            try {
+                sndUser = Master.searchUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
+                val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
+                fstUser = Master.searchUserById(userId) ?: throw IllegalAccessException()
+                Master.createLichka(fstUser, sndUser)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                return@post
             }
+            call.respondText("OK\n")
         }
     }
 }
