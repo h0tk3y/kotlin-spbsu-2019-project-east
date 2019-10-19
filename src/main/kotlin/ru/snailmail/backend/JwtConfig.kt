@@ -3,6 +3,7 @@ package ru.snailmail.backend
 import com.auth0.jwt.*
 import com.auth0.jwt.algorithms.*
 import io.ktor.auth.UserPasswordCredential
+import java.util.*
 
 object JwtConfig {
     private const val issuer = "ktor.io"
@@ -19,5 +20,6 @@ object JwtConfig {
         .withClaim("id", userId.toString())
         .withClaim("name", data.name)
         .withClaim("password", data.password)
+        .withExpiresAt(Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h expiration time
         .sign(algorithm)
 }
