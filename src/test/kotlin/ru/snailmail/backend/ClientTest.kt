@@ -1,6 +1,7 @@
 package ru.snailmail.backend
 
 
+import io.ktor.auth.UserPasswordCredential
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Assertions.*
@@ -13,12 +14,12 @@ class ClientTest {
     @Test
     fun testRegister() {
         val client = Client()
-        assertDoesNotThrow {client.register("Grisha", "my password")}
+        assertDoesNotThrow {client.register(UserPasswordCredential("Grisha", "my password"))}
         assertDoesNotThrow {Master.searchUser("Grisha")}
         assertTrue(Master.searchUser("Grisha").name == "Grisha" &&
                 Master.searchUser("Grisha").password == "my password")
         assertThrows(IllegalArgumentException::class.java) {
-            client.register("", "password")
+            client.register(UserPasswordCredential("", "password"))
         }
     }
 
@@ -26,11 +27,11 @@ class ClientTest {
     fun testLogIn() {
         val client = Client()
         assertThrows(DoesNotExistException::class.java) {
-            client.logIn("Anton", "my password")
+            client.logIn(UserPasswordCredential("Anton", "my password"))
         }
-        client.register("Anton", "my password")
+        client.register(UserPasswordCredential("Anton", "my password"))
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            client.logIn("Anton", "not my password")
+            client.logIn(UserPasswordCredential("Anton", "not my password"))
         }
         assertEquals(exception.message, "Wrong password")
     }
@@ -82,10 +83,10 @@ class ClientTest {
     val text2 = "hello, kekos"
     val text3 = "hello, abrikos"
 
-    private fun createClient(login: String, password: String): Client {
+    private fun createClient(name: String, password: String): Client {
         val client = Client()
-        client.register(login, password)
-        client.logIn(login, password)
+        client.register(UserPasswordCredential(name, password))
+        client.logIn(UserPasswordCredential(name, password))
         return client
     }
 

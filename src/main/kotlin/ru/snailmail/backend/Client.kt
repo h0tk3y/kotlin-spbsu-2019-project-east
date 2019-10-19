@@ -1,16 +1,18 @@
 package ru.snailmail.backend
 
+import io.ktor.auth.UserPasswordCredential
+
 class Client {
     // TODO: request Master using network
     lateinit var user: User
         private set
 
-    fun register(login: String, password: String) {
-        Master.register(login, password)
+    fun register(creds: UserPasswordCredential) {
+        Master.register(creds)
     }
 
-    fun logIn(login: String, password: String) {
-        user = Master.logIn(login, password)
+    fun logIn(creds: UserPasswordCredential) {
+        user = Master.logIn(creds)
     }
 
     fun sendMessage(c: Chat, text: String): UID {

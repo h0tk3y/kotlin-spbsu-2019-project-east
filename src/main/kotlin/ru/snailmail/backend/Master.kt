@@ -1,4 +1,5 @@
 package ru.snailmail.backend
+import io.ktor.auth.UserPasswordCredential
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 
@@ -18,21 +19,21 @@ object Master {
         chats.clear()
     }
 
-    fun register(userLogin: String, userPassword: String) {
+    fun register(creds: UserPasswordCredential) {
         // Consider limiting the login/password length?
-        if (userLogin == "") {
+        if (creds.name== "") {
             throw IllegalArgumentException("Empty login")
         }
-        if (users.any { it.name == userLogin }) {
-            throw AlreadyExistsException("User with login $userLogin already exists")
+        if (users.any { it.name == creds.name }) {
+            throw AlreadyExistsException("User with login ${creds.name} already exists")
         }
-        users.add(User(userLogin, userPassword))
+        users.add(User(creds.name, creds.password))
     }
 
 
-    fun logIn(userLogin: String, password: String): User {
-        val user = users.find { it.name == userLogin } ?: throw DoesNotExistException("Wrong login")
-        if (user.password != password) {
+    fun logIn(creds: UserPasswordCredential): User {
+        val user = users.find { it.name == creds.name } ?: throw DoesNotExistException("Wrong login")
+        if (user.password != creds.password) {
             throw IllegalArgumentException("Wrong password")
         }
         return user
@@ -56,7 +57,7 @@ object Master {
         if (user1 == user2) {
             throw AlreadyInTheChatException("User is already in the chat")
         }
-        if (user1.chats.filter { it is Lichka }.any { it.members.contains(user2) }) {
+        if (user1.chats.filterIsInstance<Lichka>().any { it.members.contains(user2) }) {
             throw AlreadyExistsException("You already have a chat")
         }
         chats.add(Lichka(user1, user2))
@@ -74,11 +75,5 @@ object Master {
             throw AlreadyInTheChatException("User is already in the chat")
         }
         c.addMember(newmember)
-    }
-
-    //TODO we need to decide how do we store our hashes and do we store them at all
-    fun getLoginByHash(hash: Int): String {
-        if (hash == 1) return "Anton"
-        return "Im"
     }
 }
