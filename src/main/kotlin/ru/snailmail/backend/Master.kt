@@ -21,7 +21,7 @@ object Master {
 
     fun register(creds: UserPasswordCredential) {
         // Consider limiting the login/password length?
-        if (creds.name== "") {
+        if (creds.name == "") {
             throw IllegalArgumentException("Empty login")
         }
         if (users.any { it.name == creds.name }) {

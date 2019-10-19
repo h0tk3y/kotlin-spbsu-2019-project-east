@@ -45,11 +45,8 @@ fun Application.module() {
         post("/login") {
             val creds = call.receive<UserPasswordCredential>()
             try {
-                val name = creds.name
-                val password = creds.password
-                val userCreds = UserPasswordCredential(name, password)
-                val user = Master.logIn(userCreds)
-                val token = JwtConfig.makeToken(user.userID, userCreds)
+                val user = Master.logIn(creds)
+                val token = JwtConfig.makeToken(user.userID, creds)
                 call.respondText("Your token: $token\n")
             } catch (e: IllegalArgumentException) {
                 call.respondText("ERROR\n")
