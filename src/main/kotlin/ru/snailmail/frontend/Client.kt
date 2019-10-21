@@ -1,47 +1,43 @@
 package ru.snailmail.frontend
 import ru.snailmail.backend.*
 
+import io.ktor.auth.UserPasswordCredential
+
 class Client {
     // TODO: request Master using network
-    lateinit var u: User
+    lateinit var user: User
         private set
 
-    fun register(login: String, password: String) {
-        Master.register(login, password)
+    fun register(creds: UserPasswordCredential) {
+        Master.register(creds)
     }
 
-    fun logIn(login: String, password: String) {
-        u = Master.logIn(login, password)
+    fun logIn(creds: UserPasswordCredential) {
+        user = Master.logIn(creds)
     }
 
-    fun sendMessage(c: Chat, text: String) {
-        if (!::u.isInitialized) {
+    fun sendMessage(c: Chat, text: String): UID {
+        if (!::user.isInitialized) {
             throw IllegalAccessException("Not registered")
         }
-        if (!u.chats.contains(c)) {
+        if (!user.chats.contains(c)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
-        c.sendMessage(Message(UIDGenerator.generateID(), u.userID, text))
+        return Master.sendMessage(user, c, text)
     }
 
     fun createLichka(user: User) {
-        if (!::u.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        Master.createLichka(u, user)
+        Master.createLichka(this.user, user)
     }
 
     fun createPublicChat(name: String) {
-        if (!::u.isInitialized) {
+        if (!::user.isInitialized) {
             throw IllegalAccessException("Not registered")
         }
-        Master.createPublicChat(u, name)
+        Master.createPublicChat(user, name)
     }
 
     fun inviteUser(c: PublicChat, user: User) {
-        if (!::u.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        Master.inviteUser(u, c, user)
+        Master.inviteUser(this.user, c, user)
     }
 }

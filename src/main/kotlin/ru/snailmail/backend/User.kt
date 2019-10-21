@@ -1,13 +1,16 @@
 package ru.snailmail.backend
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
+import io.ktor.auth.Principal
+
 data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
 
-class User(initName: String, initPassword: String) {
+class User(initName: String, initPassword: String): Principal {
     var name: String = initName
         private set
     val password: String = initPassword
     val userID = UIDGenerator.generateID()
-    val chats = mutableListOf<Chat>()
+    @JsonManagedReference val chats = mutableListOf<Chat>()
     val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
 
     fun changeName(newName: String) { name = newName }
@@ -26,17 +29,17 @@ class User(initName: String, initPassword: String) {
         chats.remove(chat)
     }
 
-    fun addContact(u: User) {
-        if (contacts.contains(u.userID)) {
+    fun addContact(user: User) {
+        if (contacts.contains(user.userID)) {
             throw AlreadyExistsException()
         }
-        contacts[u.userID] = Contact(u.userID, u.name, false)
+        contacts[user.userID] = Contact(user.userID, user.name, false)
     }
 
-    fun deleteContact(u: User) {
-        if (!contacts.contains(u.userID)) {
+    fun deleteContact(user: User) {
+        if (!contacts.contains(user.userID)) {
             throw DoesNotExistException()
         }
-        contacts.remove(u.userID)
+        contacts.remove(user.userID)
     }
 }
