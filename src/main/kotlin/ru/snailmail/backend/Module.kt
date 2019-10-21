@@ -9,7 +9,12 @@ import io.ktor.request.receive
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.auth.*
 import io.ktor.features.ContentNegotiation
+import io.ktor.html.respondHtml
 import io.ktor.jackson.jackson
+import kotlinx.html.body
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.title
 import kotlin.IllegalArgumentException
 
 private val objectMapper = jacksonObjectMapper()
@@ -23,7 +28,7 @@ data class TokenRequest(val token: String)
 data class TokenMessage(val chatId: Int, val messageId: UID)
 
 fun userByToken(token: String): User {
-    val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
+    val userId = JwtConfig.verifier.verify(token).subject.toInt()
     return Master.findUserById(userId) ?: throw IllegalAccessException()
 }
 
@@ -37,7 +42,14 @@ fun Application.module() {
     install(Routing) {
         // TODO: fix exceptions handling.
         get("/") {
-            call.respondText("west — lohi!", ContentType.Text.Plain)
+            call.respondHtml {
+                head {
+                    title("West - Lohi!")
+                }
+                body {
+                    h1 { +"West - lohi!" }
+                }
+            }
         }
         get("/users") {
             call.respondText { objectMapper.writeValueAsString(Master.users) + "\n" }
@@ -47,11 +59,8 @@ fun Application.module() {
                 val creds = call.receive<UserPasswordCredential>()
                 val userId = Master.register(creds)
                 call.respondText("User id: $userId\n")
-            } catch (e: AlreadyExistsException) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    mapOf("error" to "User with this login already exists")
-                )
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
         }
         post("/login") {
@@ -60,11 +69,8 @@ fun Application.module() {
                 val user = Master.logIn(creds)
                 val token = JwtConfig.makeToken(user.userID, creds)
                 call.respondText("Your token: $token\n")
-            } catch (e: IllegalArgumentException) {
-                call.respondText("ERROR\n")
-            } catch (e: DoesNotExistException) {
-                call.respond(HttpStatusCode.Conflict,
-                    mapOf("error" to "Wrong login"))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
         }
         post("/createLichka") {
@@ -75,7 +81,7 @@ fun Application.module() {
                 val chatId = Master.createLichka(fstUser, sndUser)
                 call.respondText("LichkaId: $chatId\n")
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
         }
         post("/sendMessage") {
@@ -86,7 +92,7 @@ fun Application.module() {
                 val msgId = Master.sendMessage(user, chat, params.text)
                 call.respondText("Message id: $msgId\n")
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
         }
         post("/showChats") {
@@ -95,15 +101,15 @@ fun Application.module() {
                 val user = userByToken(params.token)
                 call.respondText(objectMapper.writeValueAsString(user.chats) + "\n")
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
         }
-        post ("/deleteMessage") {
+        post("/deleteMessage") {
             try {
                 val params = call.receive<TokenMessage>()
                 Master.deleteMessage(Master.findChatById(params.chatId)!!, params.messageId)
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
         }
     }
