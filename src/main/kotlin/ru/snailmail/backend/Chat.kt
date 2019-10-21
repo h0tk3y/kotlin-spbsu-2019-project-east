@@ -27,6 +27,14 @@ abstract class Chat {
     fun containsMessage(msg: Message) : Boolean {
         return messages.contains(msg)
     }
+
+    fun deleteMessage(messageId: UID) {
+        for (i in messages) {
+            if (i.id == messageId) {
+                i.delete()
+            }
+        }
+    }
 }
 
 class PublicChat(var name : String, val god : User) : Chat() {

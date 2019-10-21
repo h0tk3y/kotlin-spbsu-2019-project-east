@@ -20,6 +20,8 @@ data class SendMessageRequest(val token: String, val chatId: String, val text: S
 
 data class TokenRequest(val token: String)
 
+data class TokenMessage(val chatId: Int, val messageId: UID)
+
 fun userByToken(token: String): User {
     val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
     return Master.findUserById(userId) ?: throw IllegalAccessException()
@@ -92,6 +94,14 @@ fun Application.module() {
                 val params = call.receive<TokenRequest>()
                 val user = userByToken(params.token)
                 call.respondText(objectMapper.writeValueAsString(user.chats) + "\n")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+            }
+        }
+        post ("/deleteMessage") {
+            try {
+                val params = call.receive<TokenMessage>()
+                Master.deleteMessage(Master.findChatById(params.chatId)!!, params.messageId)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
             }

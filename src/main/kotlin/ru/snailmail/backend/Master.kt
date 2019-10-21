@@ -59,6 +59,10 @@ object Master {
         return id
     }
 
+    fun deleteMessage(c: Chat, messageId: UID) {
+        c.deleteMessage(messageId)
+    }
+
     fun createLichka(user1: User, user2: User): UID {
         if (user1 == user2) {
             throw AlreadyInTheChatException("User is already in the chat")
