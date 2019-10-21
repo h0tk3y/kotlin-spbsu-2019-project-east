@@ -41,8 +41,8 @@ object Master {
         return user
     }
 
-    fun findUser(userLogin: String): User {
-        return users.find { it.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
+    fun findUserByLogin(userLogin: String): User? {
+        return users.find { it.name == userLogin }
     }
 
     fun findUserById(id: Int): User? {
