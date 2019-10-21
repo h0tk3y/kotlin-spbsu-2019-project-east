@@ -9,7 +9,12 @@ import io.ktor.request.receive
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.auth.*
 import io.ktor.features.ContentNegotiation
+import io.ktor.html.respondHtml
 import io.ktor.jackson.jackson
+import kotlinx.html.body
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.title
 import kotlin.IllegalArgumentException
 
 private val objectMapper = jacksonObjectMapper()
@@ -37,7 +42,14 @@ fun Application.module() {
     install(Routing) {
         // TODO: fix exceptions handling.
         get("/") {
-            call.respondText("west — lohi!", ContentType.Text.Plain)
+            call.respondHtml {
+                head {
+                    title("West - Lohi!")
+                }
+                body {
+                    h1 { +"West - lohi!" }
+                }
+            }
         }
         get("/users") {
             call.respondText { objectMapper.writeValueAsString(Master.users) + "\n" }
