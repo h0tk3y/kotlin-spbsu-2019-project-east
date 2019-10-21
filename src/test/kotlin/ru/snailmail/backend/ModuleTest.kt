@@ -35,7 +35,6 @@ class ModuleTest {
             BufferedReader(InputStreamReader(inputStream)).use {
                 val res = StringBuffer()
 
-                println("jopa")
                 var inputLine = it.readLine()
                 while (inputLine != null) {
                     res.append(inputLine)
@@ -44,7 +43,8 @@ class ModuleTest {
                 it.close()
                 response = res.toString()
             }
-            assertEquals(response, "west — lohi!")
+            assertEquals(response, "<!DOCTYPE html><html>  <head>    <title>West - Lohi!</title> " +
+                    " </head>  <body>    <h1>West - lohi!</h1>  </body></html>")
         }
     }
 }
