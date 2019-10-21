@@ -3,14 +3,8 @@ package ru.snailmail.backend
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.response.*
-import io.ktor.routing.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.testing.*
-import io.ktor.sessions.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.*
