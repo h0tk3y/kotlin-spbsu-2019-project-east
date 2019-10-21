@@ -1,4 +1,5 @@
 package ru.snailmail.backend
+import ru.snailmail.frontend.Client
 
 
 import io.ktor.auth.UserPasswordCredential
