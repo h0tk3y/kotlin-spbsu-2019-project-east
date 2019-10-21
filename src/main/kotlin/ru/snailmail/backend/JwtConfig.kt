@@ -15,7 +15,7 @@ object JwtConfig {
         .build()
 
     fun makeToken(userId: UID, data: UserPasswordCredential): String = JWT.create()
-        .withSubject(userId.toString())
+        .withSubject(userId.id.toString())
         .withIssuer(issuer)
         .withClaim("id", userId.toString())
         .withClaim("name", data.name)

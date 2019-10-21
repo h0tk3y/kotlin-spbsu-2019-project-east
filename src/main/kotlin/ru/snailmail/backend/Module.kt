@@ -23,7 +23,7 @@ data class TokenRequest(val token: String)
 data class TokenMessage(val chatId: Int, val messageId: UID)
 
 fun userByToken(token: String): User {
-    val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
+    val userId = JwtConfig.verifier.verify(token).subject.toInt()
     return Master.findUserById(userId) ?: throw IllegalAccessException()
 }
 
