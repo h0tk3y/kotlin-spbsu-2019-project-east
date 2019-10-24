@@ -1,44 +1,31 @@
 package ru.snailmail.backend
 
+import io.ktor.application.Application
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.*
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
+
 
 class ModuleTest {
     @Test
-    fun TestGetUsers() {
-        val server = embeddedServer(Netty, port = 8080) {
-            module()
-        }
-        server.start(wait = false)
-        val reqParam = URLEncoder.encode("", "UTF-8")
-
-        val mURL = URL("http://0.0.0.0:8080/$reqParam")
-
-        lateinit
-        var response:String
-
-        with(mURL.openConnection() as HttpURLConnection) {
-            requestMethod = "GET"
-
-            BufferedReader(InputStreamReader(inputStream)).use {
-                val res = StringBuffer()
-
-                var inputLine = it.readLine()
-                while (inputLine != null) {
-                    res.append(inputLine)
-                    inputLine = it.readLine()
-                }
-                it.close()
-                response = res.toString()
-            }
-            assertEquals(response, "<!DOCTYPE html><html>  <head>    <title>West - Lohi!</title> " +
-                    " </head>  <body>    <h1>West - lohi!</h1>  </body></html>")
+    fun testWestLohi() = withTestApplication(Application::module) {
+        with(handleRequest(HttpMethod.Get, "/")) {
+            assertEquals(HttpStatusCode.OK, response.status())
+            assertEquals(
+                "<!DOCTYPE html>\n" +
+                        "<html>\n" +
+                        "  <head>\n" +
+                        "    <title>West - Lohi!</title>\n" +
+                        "  </head>\n" +
+                        "  <body>\n" +
+                        "    <h1>West - lohi!</h1>\n" +
+                        "  </body>\n" +
+                        "</html>\n", response.content
+            )
         }
     }
 }
