@@ -16,9 +16,9 @@ class ClientTest {
     fun testRegister() {
         val client = Client()
         assertDoesNotThrow {client.register(UserPasswordCredential("Grisha", "my password"))}
-        assertDoesNotThrow {Master.findUser("Grisha")}
-        assertTrue(Master.findUser("Grisha").name == "Grisha" &&
-                Master.findUser("Grisha").password == "my password")
+        assertNotNull{Master.findUserByLogin("Grisha")}
+        assertTrue(Master.findUserByLogin("Grisha")!!.name == "Grisha" &&
+                Master.findUserByLogin("Grisha")!!.password == "my password")
         assertThrows(IllegalArgumentException::class.java) {
             client.register(UserPasswordCredential("", "password"))
         }
