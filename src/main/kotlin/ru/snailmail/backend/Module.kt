@@ -19,17 +19,17 @@ import kotlin.IllegalArgumentException
 
 private val objectMapper = jacksonObjectMapper()
 
-data class CreateLichkaRequest(val token: String, val invitedId: String)
+data class CreateLichkaRequest(val token: String, val invitedId: UID)
 
-data class SendMessageRequest(val token: String, val chatId: String, val text: String)
+data class SendMessageRequest(val token: String, val chatId: UID, val text: String)
 
 data class TokenRequest(val token: String)
 
-data class TokenMessage(val chatId: Int, val messageId: UID)
+data class TokenMessage(val chatId: UID, val messageId: UID)
 
 data class CreatePublicChatRequest(val token: String, val chatName: String)
 
-data class InviteMemberRequest(val userId: String, val chatId: String, val invitedId: String)
+data class InviteMemberRequest(val userId: UID, val chatId: UID, val invitedId: UID)
 
 fun userByToken(token: String): User {
     val userId = JwtConfig.verifier.verify(token).subject.toInt()
@@ -98,17 +98,17 @@ fun Application.module() {
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
             }
         }
-//        post("/inviteMember") {
-//            try {
-//                val params = call.receive<InviteMemberRequest>()
-//                val user = Master.findUserById(params.userId.toInt()) ?: throw IllegalArgumentException()
-//                val invited = Master.findUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
-//                val chat = Master.findChatById(params.chatId.toInt()) ?: throw IllegalArgumentException()
-//                Master.inviteUser(user, chat, invited)
-//            } catch (e: Exception) {
-//                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
-//            }
-//        }
+        post("/inviteMember") {
+            try {
+                val params = call.receive<InviteMemberRequest>()
+                val user = Master.findUserById(params.userId.toInt()) ?: throw IllegalArgumentException()
+                val invited = Master.findUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
+                val chat = Master.findChatById(params.chatId.toInt()) ?: throw IllegalArgumentException()
+                Master.inviteUser(user, chat as PublicChat, invited)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+            }
+        }
 
         post("/sendMessage") {
             try {
@@ -133,7 +133,7 @@ fun Application.module() {
         post("/deleteMessage") {
             try {
                 val params = call.receive<TokenMessage>()
-                Master.deleteMessage(Master.findChatById(params.chatId)!!, params.messageId)
+                Master.deleteMessage(Master.findChatById(params.chatId.toInt())!!, params.messageId)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }

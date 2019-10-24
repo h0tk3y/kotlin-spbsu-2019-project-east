@@ -7,4 +7,8 @@ object UIDGenerator  {
     }
 }
 
-data class UID (val id : Long);
+data class UID (val id : Long) {
+    fun toInt(): Int {
+        return id.toInt()
+    }
+};
