@@ -22,6 +22,10 @@ data class TokenRequest(val token: String)
 
 data class TokenMessage(val chatId: Int, val messageId: UID)
 
+data class CreatePublicChatRequest(val token: String, val chatName: String)
+
+data class InviteMemberRequest(val userId: String, val chatId: String, val invitedId: String)
+
 fun userByToken(token: String): User {
     val userId = JwtConfig.verifier.verify(token).subject.drop(7).dropLast(1).toInt() // TODO: fix this
     return Master.findUserById(userId) ?: throw IllegalAccessException()
@@ -78,6 +82,28 @@ fun Application.module() {
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
             }
         }
+        post("/createPublicChat") {
+            try {
+                val params = call.receive<CreatePublicChatRequest>()
+                val owner = userByToken(params.token)
+                val chatId = Master.createPublicChat(owner, params.chatName)
+                call.respondText("PublicChatId: $chatId\n")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+            }
+        }
+//        post("/inviteMember") {
+//            try {
+//                val params = call.receive<InviteMemberRequest>()
+//                val user = Master.findUserById(params.userId.toInt()) ?: throw IllegalArgumentException()
+//                val invited = Master.findUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
+//                val chat = Master.findChatById(params.chatId.toInt()) ?: throw IllegalArgumentException()
+//                Master.inviteUser(user, chat, invited)
+//            } catch (e: Exception) {
+//                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+//            }
+//        }
+
         post("/sendMessage") {
             try {
                 val params = call.receive<SendMessageRequest>()

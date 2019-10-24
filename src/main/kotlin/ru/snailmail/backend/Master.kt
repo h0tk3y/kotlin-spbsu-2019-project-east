@@ -81,8 +81,8 @@ object Master {
         return chat.chatID
     }
 
-    fun inviteUser(chatmember: User, c: PublicChat, newmember: User) {
-        if (!chatmember.chats.contains(c)) {
+    fun inviteUser(chatMember: User, c: PublicChat, newmember: User) {
+        if (!chatMember.chats.contains(c)) {
             throw DoesNotExistException("User not in the chat")
         }
         if (newmember.chats.contains(c)) {
