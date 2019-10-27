@@ -45,12 +45,12 @@ object Master {
         return users.find { it.name == userLogin }
     }
 
-    fun findUserById(id: Int): User? {
-        return users.find { it.userID.id == id.toLong() }
+    fun findUserById(id: UID): User? {
+        return users.find { it.userID == id }
     }
 
-    fun findChatById(id: Int): Chat? {
-        return chats.find { it.chatID.id == id.toLong() }
+    fun findChatById(id: UID): Chat? {
+        return chats.find { it.chatID == id }
     }
 
     fun sendMessage(user: User, c: Chat, text: String): UID {

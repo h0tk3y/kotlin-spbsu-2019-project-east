@@ -85,11 +85,11 @@ class ModuleTest {
         }
         val lichka1Id = lichkaIdByResponse(createLichka.response)
         assertEquals(HttpStatusCode.OK, createLichka.response.status())
-        assertNotNull(Master.findChatById(lichka1Id.toInt()))
-        val lichka1 = Master.findChatById(lichka1Id.toInt())
-        assert(Master.findUserById(user1Id.toInt())?.chats?.contains(lichka1) ?: false)
-        assert(Master.findUserById(user2Id.toInt())?.chats?.contains(lichka1) ?: false)
-        assert(!(Master.findUserById(user3Id.toInt())?.chats?.contains(lichka1) ?: true))
+        assertNotNull(Master.findChatById(lichka1Id))
+        val lichka1 = Master.findChatById(lichka1Id)
+        assert(Master.findUserById(user1Id)?.chats?.contains(lichka1) ?: false)
+        assert(Master.findUserById(user2Id)?.chats?.contains(lichka1) ?: false)
+        assert(!(Master.findUserById(user3Id)?.chats?.contains(lichka1) ?: true))
     }
 
 }

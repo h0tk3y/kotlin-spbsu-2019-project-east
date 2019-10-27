@@ -32,8 +32,8 @@ data class CreatePublicChatRequest(val token: String, val chatName: String)
 data class InviteMemberRequest(val userId: UID, val chatId: UID, val invitedId: UID)
 
 fun userByToken(token: String): User {
-    val userId = JwtConfig.verifier.verify(token).subject.toInt()
-    return Master.findUserById(userId) ?: throw IllegalAccessException()
+    val userId = JwtConfig.verifier.verify(token).subject.toLong()
+    return Master.findUserById(UID(userId)) ?: throw IllegalAccessException()
 }
 
 fun Application.module() {
@@ -80,7 +80,7 @@ fun Application.module() {
         post("/createLichka") {
             try {
                 val params = call.receive<CreateLichkaRequest>()
-                val sndUser = Master.findUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
+                val sndUser = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                 val fstUser = userByToken(params.token)
                 val chatId = Master.createLichka(fstUser, sndUser)
                 call.respondText("LichkaId: $chatId\n")
@@ -101,9 +101,9 @@ fun Application.module() {
         post("/inviteMember") {
             try {
                 val params = call.receive<InviteMemberRequest>()
-                val user = Master.findUserById(params.userId.toInt()) ?: throw IllegalArgumentException()
-                val invited = Master.findUserById(params.invitedId.toInt()) ?: throw IllegalArgumentException()
-                val chat = Master.findChatById(params.chatId.toInt()) ?: throw IllegalArgumentException()
+                val user = Master.findUserById(params.userId) ?: throw IllegalArgumentException()
+                val invited = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
+                val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
                 Master.inviteUser(user, chat as PublicChat, invited)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
@@ -114,7 +114,7 @@ fun Application.module() {
             try {
                 val params = call.receive<SendMessageRequest>()
                 val user = userByToken(params.token)
-                val chat = Master.findChatById(params.chatId.toInt()) ?: throw java.lang.IllegalArgumentException()
+                val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
                 val msgId = Master.sendMessage(user, chat, params.text)
                 call.respondText("Message id: $msgId\n")
             } catch (e: Exception) {
@@ -133,7 +133,7 @@ fun Application.module() {
         post("/deleteMessage") {
             try {
                 val params = call.receive<TokenMessage>()
-                Master.deleteMessage(Master.findChatById(params.chatId.toInt())!!, params.messageId)
+                Master.deleteMessage(Master.findChatById(params.chatId)!!, params.messageId)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
