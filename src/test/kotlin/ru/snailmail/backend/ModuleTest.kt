@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import io.ktor.application.Application
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.http.*
+import io.ktor.http.auth.HttpAuthHeader
+import io.ktor.request.authorization
 import io.ktor.request.receive
 import io.ktor.request.receiveText
 import io.ktor.response.respondText
@@ -77,9 +79,9 @@ class ModuleTest {
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(Gson().toJson(cred1))
         }
-        val tokenOfUser1 = token.response.content.toString().drop(12)
-        val params = CreateLichkaRequest(tokenOfUser1, user2Id)
+        val params = CreateLichkaRequest(user2Id)
         val createLichka = handleRequest(HttpMethod.Post, "/createLichka") {
+            addHeader(HttpHeaders.Authorization, "Bearer ${token.response.content}")
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(Gson().toJson(params))
         }
