@@ -37,10 +37,10 @@ abstract class Chat {
     }
 }
 
-class PublicChat(var name : String, val god : User) : Chat() {
+class PublicChat(var name : String, @JsonBackReference val owner : User) : Chat() {
     init {
-        members.add(god)
-        god.addChat(this)
+        members.add(owner)
+        owner.addChat(this)
     }
 
     fun addMember(member : User) {

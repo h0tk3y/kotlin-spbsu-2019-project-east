@@ -41,16 +41,16 @@ object Master {
         return user
     }
 
-    fun findUser(userLogin: String): User {
-        return users.find { it.name == userLogin } ?: throw DoesNotExistException("$userLogin login doesn't exist")
+    fun findUserByLogin(userLogin: String): User? {
+        return users.find { it.name == userLogin }
     }
 
-    fun findUserById(id: Int): User? {
-        return users.find { it.userID.id == id.toLong() }
+    fun findUserById(id: UID): User? {
+        return users.find { it.userID == id }
     }
 
-    fun findChatById(id: Int): Chat? {
-        return chats.find { it.chatID.id == id.toLong() }
+    fun findChatById(id: UID): Chat? {
+        return chats.find { it.chatID == id }
     }
 
     fun sendMessage(user: User, c: Chat, text: String): UID {
@@ -81,8 +81,8 @@ object Master {
         return chat.chatID
     }
 
-    fun inviteUser(chatmember: User, c: PublicChat, newmember: User) {
-        if (!chatmember.chats.contains(c)) {
+    fun inviteUser(chatMember: User, c: PublicChat, newmember: User) {
+        if (!chatMember.chats.contains(c)) {
             throw DoesNotExistException("User not in the chat")
         }
         if (newmember.chats.contains(c)) {
