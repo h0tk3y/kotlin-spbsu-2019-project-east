@@ -1,5 +1,7 @@
 package ru.snailmail.frontend
 
+import io.ktor.auth.UserPasswordCredential
+
 fun main() {
     val ca = ConsoleApp()
     ca.runner()
@@ -40,7 +42,12 @@ class ConsoleApp {
     }
 
     fun register() {
-        println("It's bad, let's register")
+        println("Enter your name: ")
+        var name = readLine()
+        println("Enter your password: ")
+        var pass = readLine()
+        client.register(UserPasswordCredential(name ?: "", pass ?: ""))
+//        println(UserPasswordCredential(name ?: "", pass ?: "").toString())
     }
 
     fun help() {
