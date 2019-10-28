@@ -118,6 +118,7 @@ fun Application.module() {
         }
 
         post("/sendMessage") {
+            // TODO: check if user is not blocked.
             try {
                 val params = call.receive<SendMessageRequest>()
                 val user = userByToken(params.token)
@@ -129,7 +130,6 @@ fun Application.module() {
             }
         }
         post("/chats") {
-            // TODO: hide chats with blocked users.
             try {
                 val params = call.receive<TokenRequest>()
                 val user = userByToken(params.token)
