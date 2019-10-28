@@ -5,10 +5,12 @@ import ru.snailmail.backend.*
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
+import java.net.HttpURLConnection.HTTP_OK
 import java.net.URL
 import java.net.URLEncoder
 
@@ -104,8 +106,6 @@ class Client {
         val outputBytes = Gson().toJson(cred).toByteArray(charset("UTF-8"))
         con.outputStream.write(outputBytes)
 
-        val responseMsg = con.responseMessage
-        val response = con.responseCode
-        println(responseMsg)
+        if (con.responseCode != HTTP_OK) throw java.lang.IllegalArgumentException("Something went wrong")
     }
 }
