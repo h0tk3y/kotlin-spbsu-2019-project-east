@@ -25,11 +25,11 @@ data class SendMessageRequest(val token: String, val chatId: UID, val text: Stri
 
 data class TokenRequest(val token: String)
 
-data class TokenMessage(val chatId: UID, val messageId: UID)
+data class TokenMessageRequest(val token: String, val chatId: UID, val messageId: UID)
 
 data class CreatePublicChatRequest(val token: String, val chatName: String)
 
-data class InviteMemberRequest(val userId: UID, val chatId: UID, val invitedId: UID)
+data class InviteMemberRequest(val token: String, val chatId: UID, val invitedId: UID)
 
 fun userByToken(token: String): User {
     val userId = JwtConfig.verifier.verify(token).subject.toLong()
@@ -101,7 +101,7 @@ fun Application.module() {
         post("/inviteMember") {
             try {
                 val params = call.receive<InviteMemberRequest>()
-                val user = Master.findUserById(params.userId) ?: throw IllegalArgumentException()
+                val user = userByToken(params.token)
                 val invited = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                 val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
                 Master.inviteUser(user, chat as PublicChat, invited)
@@ -132,8 +132,9 @@ fun Application.module() {
         }
         post("/deleteMessage") {
             try {
-                val params = call.receive<TokenMessage>()
-                Master.deleteMessage(Master.findChatById(params.chatId)!!, params.messageId)
+                val params = call.receive<TokenMessageRequest>()
+                val user = userByToken(params.token)
+                Master.deleteMessage(user, Master.findChatById(params.chatId)!!, params.messageId)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
