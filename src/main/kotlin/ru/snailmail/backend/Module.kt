@@ -27,6 +27,8 @@ data class TokenRequest(val token: String)
 
 data class TokenMessageRequest(val token: String, val chatId: UID, val messageId: UID)
 
+data class TokenChatRequest(val token: String, val chatId: UID)
+
 data class CreatePublicChatRequest(val token: String, val chatName: String)
 
 data class InviteMemberRequest(val token: String, val chatId: UID, val invitedId: UID)
@@ -132,6 +134,19 @@ fun Application.module() {
                 val params = call.receive<TokenRequest>()
                 val user = userByToken(params.token)
                 call.respondText(objectMapper.writeValueAsString(user.chats) + "\n")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+            }
+        }
+        post("/showMessages") {
+            try {
+                val params = call.receive<TokenChatRequest>()
+                val user = userByToken(params.token)
+                val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
+                if (!chat.members.contains(user)) {
+                    throw DoesNotExistException("User not in the chat")
+                }
+                call.respondText(objectMapper.writeValueAsString(chat.messages.map { it.text }) + "\n")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
