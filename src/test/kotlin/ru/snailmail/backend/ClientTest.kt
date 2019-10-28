@@ -3,12 +3,28 @@ import ru.snailmail.frontend.Client
 
 
 import io.ktor.auth.UserPasswordCredential
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.BeforeEach
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import java.lang.IllegalArgumentException
+import java.util.concurrent.TimeUnit
+
 
 class ClientTest {
+    val server = embeddedServer(Netty, port = 8080) {
+        module()
+    }
+    @BeforeEach
+    fun startServer() {
+        server.start(wait = false)
+    }
+
+    @AfterEach
+    fun stopServer() {
+        server.stop(0, 0, TimeUnit.SECONDS)
+    }
+
     @BeforeEach
     private fun clear() = Master.clear()
 

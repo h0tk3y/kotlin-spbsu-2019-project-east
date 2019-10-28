@@ -1,4 +1,5 @@
 package ru.snailmail.backend
+
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -53,14 +54,22 @@ object Master {
         return chats.find { it.chatID == id }
     }
 
+    fun findMessageById(c: Chat, id: UID): Message? {
+        return c.messages.find { it.id == id }
+    }
+
     fun sendMessage(user: User, c: Chat, text: String): UID {
+        if (!c.members.contains(user)) {
+            throw DoesNotExistException("User not in the chat")
+        }
         val id = UIDGenerator.generateID()
         c.sendMessage(Message(id, user.userID, text))
         return id
     }
 
-    fun deleteMessage(c: Chat, messageId: UID) {
-        c.deleteMessage(messageId)
+    fun deleteMessage(user: User, c: Chat, messageId: UID) {
+        val message = findMessageById(c, messageId)
+        message?.let { if (message.from == user.userID) c.deleteMessage(messageId) }
     }
 
     fun createLichka(user1: User, user2: User): UID {
