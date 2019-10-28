@@ -1,7 +1,10 @@
 package ru.snailmail.frontend
+import com.google.gson.Gson
 import ru.snailmail.backend.*
 
 import io.ktor.auth.UserPasswordCredential
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -92,34 +95,17 @@ class Client {
     }
 
     fun sendPostRequest(userName:String, password:String) {
+        val cred = UserPasswordCredential(userName, password)
+        val url = URL("http://127.0.0.1:8080/register")
+        val con = url.openConnection() as HttpURLConnection
+        con.doOutput = true
+        con.requestMethod = "POST"
+        con.setRequestProperty(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+        val outputBytes = Gson().toJson(cred).toByteArray(charset("UTF-8"))
+        con.outputStream.write(outputBytes)
 
-        var reqParam = URLEncoder.encode("name", "UTF-8") + "=" + URLEncoder.encode(userName, "UTF-8")
-        reqParam += "&" + URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(password, "UTF-8")
-//        var reqParam = URLEncoder.encode(param, "UTF-8")
-        val mURL = URL("http://127.0.0.1/register?")
-
-        with(mURL.openConnection() as HttpURLConnection) {
-            // optional default is GET
-            requestMethod = "POST"
-
-            val wr = OutputStreamWriter(getOutputStream());
-            wr.write(reqParam);
-            wr.flush();
-
-            println("URL : $url")
-            println("Response Code : $responseCode")
-
-            BufferedReader(InputStreamReader(inputStream)).use {
-                val response = StringBuffer()
-
-                var inputLine = it.readLine()
-                while (inputLine != null) {
-                    response.append(inputLine)
-                    inputLine = it.readLine()
-                }
-                it.close()
-                println("Response : $response")
-            }
-        }
+        val responseMsg = con.responseMessage
+        val response = con.responseCode
+        println(responseMsg)
     }
 }
