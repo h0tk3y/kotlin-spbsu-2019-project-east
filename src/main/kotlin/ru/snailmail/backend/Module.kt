@@ -125,7 +125,6 @@ fun Application.module() {
                 }
             }
             post("/sendMessage") {
-                // TODO: check if user is not blocked.
                 try {
                     val params = call.receive<SendMessageRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
@@ -195,8 +194,8 @@ fun Application.module() {
                 try {
                     val params = call.receive<BlockOrUnblockUserRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    val contact = user.contacts[params.userId] ?: throw java.lang.IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException("User not found")
+                    val contact = user.contacts[params.userId] ?: throw IllegalArgumentException("Contact not found")
                     contact.isBlocked = true
                     call.respondText("OK")
                 } catch (e: Exception) {

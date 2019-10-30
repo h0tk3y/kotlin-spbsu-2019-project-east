@@ -63,6 +63,18 @@ object Master {
             throw DoesNotExistException("User not in the chat")
         }
         val id = UIDGenerator.generateID()
+        if (c is Lichka) {
+            c.first.contacts[c.second.userID]?.let {
+                if (it.isBlocked) {
+                    throw IllegalAccessException("User is blocked")
+                }
+            }
+            c.second.contacts[c.first.userID]?.let {
+                if (it.isBlocked) {
+                    throw IllegalAccessException("User is blocked")
+                }
+            }
+        }
         c.sendMessage(Message(id, user.userID, text))
         return id
     }
