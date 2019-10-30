@@ -38,7 +38,11 @@ class ConsoleApp {
     }
 
     fun login() {
-        println("It's great")
+        println("Enter your name: ")
+        var name = readLine()
+        println("Enter your password: ")
+        var pass = readLine()
+        client.logIn(UserPasswordCredential(name ?: "", pass ?: ""))
     }
 
     fun register() {
@@ -47,7 +51,6 @@ class ConsoleApp {
         println("Enter your password: ")
         var pass = readLine()
         client.register(UserPasswordCredential(name ?: "", pass ?: ""))
-//        println(UserPasswordCredential(name ?: "", pass ?: "").toString())
     }
 
     fun help() {

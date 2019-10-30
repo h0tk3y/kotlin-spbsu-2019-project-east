@@ -28,13 +28,12 @@ class Client {
         return sendGetRequest("users")
     }
 
-    fun register(creds: UserPasswordCredential) {
-//        var params = "register?name=" + creds.name + "&password=" + creds.password
-        return sendPostRequest(creds.name, creds.password)
+    fun register(creds: UserPasswordCredential) : String?{
+        return sendPostRequest("register", creds.name, creds.password)
     }
 
-    fun logIn(creds: UserPasswordCredential) {
-        user = Master.logIn(creds)
+    fun logIn(creds: UserPasswordCredential) : String? {
+        return sendPostRequest("login", creds.name, creds.password)
     }
 
     fun sendMessage(c: Chat, text: String): UID {
@@ -64,21 +63,15 @@ class Client {
 
     private fun sendGetRequest(param: String) : String? {
 
-//        var reqParam = URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(userName, "UTF-8")
-//        reqParam += "&" + URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(password, "UTF-8")
         var reqParam = URLEncoder.encode(param, "UTF-8")
-
         val mURL = URL("http://127.0.0.1:8080/$reqParam")
 
         lateinit
         var response:String;
 
         with(mURL.openConnection() as HttpURLConnection) {
-            // optional default is GET
-            requestMethod = "GET"
 
-//            println("URL : $url")
-//            println("Response Code : $responseCode")
+            requestMethod = "GET"
 
             BufferedReader(InputStreamReader(inputStream)).use {
                 val res = StringBuffer()
@@ -89,23 +82,30 @@ class Client {
                     inputLine = it.readLine()
                 }
                 it.close()
-//                println("Response : $res")
                 response = res.toString()
             }
         }
         return response
     }
 
-    fun sendPostRequest(userName:String, password:String) {
+    private fun sendPostRequest(addr:String, userName:String, password:String) : String?{
         val cred = UserPasswordCredential(userName, password)
-        val url = URL("http://127.0.0.1:8080/register")
+        val url = URL("http://127.0.0.1:8080/$addr")
         val con = url.openConnection() as HttpURLConnection
+
         con.doOutput = true
         con.requestMethod = "POST"
         con.setRequestProperty(HttpHeaders.ContentType, ContentType.Application.Json.toString())
         val outputBytes = Gson().toJson(cred).toByteArray(charset("UTF-8"))
         con.outputStream.write(outputBytes)
 
+
         if (con.responseCode != HTTP_OK) throw java.lang.IllegalArgumentException("Something went wrong")
+
+        val responseMsg = con.responseMessage
+        val response = con.responseCode
+        println(responseMsg)
+        return responseMsg
+
     }
 }
