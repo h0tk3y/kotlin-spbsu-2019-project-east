@@ -24,9 +24,9 @@ data class CreateLichkaRequest(val invitedId: UID)
 
 data class SendMessageRequest(val chatId: UID, val text: String)
 
-data class TokenMessageRequest(val chatId: UID, val messageId: UID)
+data class DeleteMessageRequest(val chatId: UID, val messageId: UID)
 
-data class TokenChatRequest(val chatId: UID)
+data class ShowMessageRequest(val chatId: UID)
 
 data class CreatePublicChatRequest(val chatName: String)
 
@@ -148,7 +148,7 @@ fun Application.module() {
             }
             post("/showMessages") {
                 try {
-                    val params = call.receive<TokenChatRequest>()
+                    val params = call.receive<ShowMessageRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
@@ -162,7 +162,7 @@ fun Application.module() {
             }
             post("/deleteMessage") {
                 try {
-                    val params = call.receive<TokenMessageRequest>()
+                    val params = call.receive<DeleteMessageRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteMessage(user, Master.findChatById(params.chatId)!!, params.messageId)
