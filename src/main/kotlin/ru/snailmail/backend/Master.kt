@@ -7,11 +7,11 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main(args: Array<String>) {
-    Database.connect(
-        "jdbc:h2:~/course_2/kotlin/kotlin-spbsu-2019-project-east",
+    val connection = Database.connect(
+        "jdbc:h2:./testdb",
         driver = "org.h2.Driver")
 
-    transaction {
+    transaction(connection) {
         SchemaUtils.create(Users)
     }
 
@@ -22,9 +22,9 @@ fun main(args: Array<String>) {
 }
 
 object Users : Table() {
-    val userId = integer("id").primaryKey()
+    val userId = long("id").primaryKey()
     val name = varchar("name", length = 50)
-    val password = integer("password")
+    val password = varchar("password", length = 50)
 }
 
 object Master {
@@ -44,9 +44,13 @@ object Master {
         if (users.any { it.name == creds.name }) {
             throw AlreadyExistsException("User with login ${creds.name} already exists")
         }
-        val user = User(creds.name, creds.password)
-        users.add(user)
-        return user.userID
+        val id = UIDGenerator.generateID()
+        Users.insert {
+            it[name] = creds.name
+            it[password] = creds.password
+            it[userId] = id.id
+        }
+        return id
     }
 
 
