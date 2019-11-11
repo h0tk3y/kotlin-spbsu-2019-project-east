@@ -67,13 +67,13 @@ fun Application.module() {
             }
         }
         get("/users") {
-            call.respondText { objectMapper.writeValueAsString(Master.users) + "\n" }
+            call.respond(Master.users)
         }
         post("/register") {
             try {
                 val creds = call.receive<UserPasswordCredential>()
-                val userId = Master.register(creds)
-                call.respondText("User id: $userId\n")
+                Master.register(creds)
+                call.respondText("OK")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
@@ -85,7 +85,7 @@ fun Application.module() {
                 val token = JwtConfig.makeToken(user.userID, creds)
                 call.respond(token)
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
             }
         }
         authenticate {
@@ -95,10 +95,10 @@ fun Application.module() {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val sndUser = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                     val fstUser = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
-                    val chatId = Master.createLichka(fstUser, sndUser)
-                    call.respondText("LichkaId: $chatId\n")
+                    Master.createLichka(fstUser, sndUser)
+                    call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/createPublicChat") {
@@ -109,7 +109,7 @@ fun Application.module() {
                     val chatId = Master.createPublicChat(owner, params.chatName)
                     call.respondText("PublicChatId: $chatId\n")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
                 }
             }
             post("/inviteMember") {
@@ -120,8 +120,9 @@ fun Application.module() {
                     val invited = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
                     Master.inviteUser(user, chat as PublicChat, invited)
+                    call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
                 }
             }
             post("/sendMessage") {
@@ -130,19 +131,19 @@ fun Application.module() {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
-                    val msgId = Master.sendMessage(user, chat, params.text)
-                    call.respondText("Message id: $msgId\n")
+                    Master.sendMessage(user, chat, params.text)
+                    call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/chats") {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respondText(objectMapper.writeValueAsString(user.chats) + "\n")
+                    call.respond(user.chats)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/showMessages") {
@@ -154,9 +155,9 @@ fun Application.module() {
                     if (!chat.members.contains(user)) {
                         throw DoesNotExistException("User not in the chat")
                     }
-                    call.respondText(objectMapper.writeValueAsString(chat.messages.map { it.text }) + "\n")
+                    call.respond(chat.messages.map { it.text })
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/deleteMessage") {
@@ -165,17 +166,18 @@ fun Application.module() {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteMessage(user, Master.findChatById(params.chatId)!!, params.messageId)
+                    call.respond("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/contacts") {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respondText { objectMapper.writeValueAsString(user.contacts.values) + "\n" }
+                    call.respond(user.contacts.values)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/changeContactName") {
@@ -187,7 +189,7 @@ fun Application.module() {
                     contact.preferredName = params.newName
                     call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/blockUser") {
@@ -199,7 +201,7 @@ fun Application.module() {
                     contact.isBlocked = true
                     call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/unblockUser") {
@@ -211,7 +213,7 @@ fun Application.module() {
                     contact.isBlocked = false
                     call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("addContact") {
@@ -223,7 +225,7 @@ fun Application.module() {
                     user.addContact(other)
                     call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("deleteContact") {
@@ -235,7 +237,7 @@ fun Application.module() {
                     user.deleteContact(other)
                     call.respondText("OK")
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
         }
