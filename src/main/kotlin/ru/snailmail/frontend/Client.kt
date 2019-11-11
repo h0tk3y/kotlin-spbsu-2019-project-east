@@ -6,7 +6,9 @@ import io.ktor.auth.UserPasswordCredential
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlinx.css.input
 import java.io.BufferedReader
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -15,6 +17,9 @@ import java.net.URL
 import java.net.URLEncoder
 
 class Client {
+
+    var token : String? = null
+
     // TODO: request Master using network
     lateinit var user: User
         private set
@@ -29,11 +34,20 @@ class Client {
     }
 
     fun register(creds: UserPasswordCredential) : String?{
-        return sendPostRequest("register", creds.name, creds.password)
+        val outputBytes = Gson().toJson(creds).toByteArray(charset("UTF-8"))
+        return sendPostRequest("register", outputBytes) //returns Json {UserId}
     }
 
     fun logIn(creds: UserPasswordCredential) : String? {
-        return sendPostRequest("login", creds.name, creds.password)
+        val outputBytes = Gson().toJson(creds).toByteArray(charset("UTF-8"))
+        var res = "OK"
+
+        try {
+            token = sendPostRequest("login", outputBytes)
+        } catch (e : Exception) {
+            res = "Error"
+        }
+        return res
     }
 
     fun sendMessage(c: Chat, text: String): UID {
@@ -67,45 +81,54 @@ class Client {
         val mURL = URL("http://127.0.0.1:8080/$reqParam")
 
         lateinit
-        var response:String;
-
+        var response:String
         with(mURL.openConnection() as HttpURLConnection) {
-
             requestMethod = "GET"
-
-            BufferedReader(InputStreamReader(inputStream)).use {
-                val res = StringBuffer()
-
-                var inputLine = it.readLine()
-                while (inputLine != null) {
-                    res.append(inputLine)
-                    inputLine = it.readLine()
-                }
-                it.close()
-                response = res.toString()
-            }
+            response = readResponse(inputStream)
         }
         return response
     }
 
-    private fun sendPostRequest(addr:String, userName:String, password:String) : String?{
-        val cred = UserPasswordCredential(userName, password)
+    private fun sendPostRequest(addr:String, outputBytes:ByteArray) : String?{
+
         val url = URL("http://127.0.0.1:8080/$addr")
-        val con = url.openConnection() as HttpURLConnection
 
-        con.doOutput = true
-        con.requestMethod = "POST"
-        con.setRequestProperty(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-        val outputBytes = Gson().toJson(cred).toByteArray(charset("UTF-8"))
-        con.outputStream.write(outputBytes)
+        lateinit
+        var response:String
 
+        with(url.openConnection() as HttpURLConnection) {
+            doOutput = true
+            requestMethod = "POST"
 
-        if (con.responseCode != HTTP_OK) throw java.lang.IllegalArgumentException("Something went wrong")
+            setRequestProperty(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
-        val responseMsg = con.responseMessage
-        val response = con.responseCode
-        println(responseMsg)
-        return responseMsg
+            if (token != null) {
+                setRequestProperty(HttpHeaders.Authorization, "Bearer ${token}")
+            }
 
+            outputStream.write(outputBytes)
+
+            if (responseCode != HTTP_OK) throw java.lang.IllegalArgumentException("Something went wrong")
+
+            response = readResponse(inputStream)
+//            println(responseMessage)
+        }
+
+        return response
+
+    }
+
+    private fun readResponse(inputStream : InputStream) : String {
+        BufferedReader(InputStreamReader(inputStream)).use {
+            val res = StringBuffer()
+
+            var inputLine = it.readLine()
+            while (inputLine != null) {
+                res.append(inputLine)
+                inputLine = it.readLine()
+            }
+            it.close()
+            return res.toString()
+        }
     }
 }

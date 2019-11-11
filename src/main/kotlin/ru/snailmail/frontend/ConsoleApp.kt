@@ -29,6 +29,9 @@ class ConsoleApp {
                 "users" -> {
                     getUsers()
                 }
+                "createLichka" -> {
+                    createLichka()
+                }
                 "exit" -> {
                     flag = false
                 }
@@ -37,23 +40,23 @@ class ConsoleApp {
         }
     }
 
-    fun login() {
+    private fun login() {
         println("Enter your name: ")
         var name = readLine()
         println("Enter your password: ")
         var pass = readLine()
-        client.logIn(UserPasswordCredential(name ?: "", pass ?: ""))
+        println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
     }
 
-    fun register() {
+    private fun register() {
         println("Enter your name: ")
         var name = readLine()
         println("Enter your password: ")
         var pass = readLine()
-        client.register(UserPasswordCredential(name ?: "", pass ?: ""))
+        println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
     }
 
-    fun help() {
+    private fun help() {
         print(
             "Possible commands:\n" +
                     "\tlogin          Залогиниться\n" +
@@ -61,11 +64,17 @@ class ConsoleApp {
         )
     }
 
-    fun getUsers() {
+    private fun getUsers() {
         println(client.getUsers())
     }
 
-    fun dumb() {
+    private fun createLichka() {
+        println("Enter your friend's name:")
+        var name = readLine()
+        createLichka()
+    }
+
+    private fun dumb() {
         println("Sdohny Tvar'")
     }
 }
