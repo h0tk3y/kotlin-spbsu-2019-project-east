@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.Disabled
 
 
 class ModuleTest {
@@ -34,8 +33,6 @@ class ModuleTest {
             )
         }
     }
-
-    @Disabled
     @Test
     fun testRegister() = withTestApplication(Application::module) {
         val cred = UserPasswordCredential("Anton", "password")
@@ -55,7 +52,6 @@ class ModuleTest {
         return UID(response.content.toString().drop(17).take(response.content.toString().drop(17).length - 2).toLong())
     }
 
-    @Disabled
     @Test
     fun testCreateLichka() = withTestApplication(Application::module) {
         val cred1 = UserPasswordCredential("Anton1", "password")

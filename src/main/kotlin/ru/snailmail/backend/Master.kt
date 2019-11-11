@@ -87,12 +87,14 @@ object Master {
         }
         val id = UIDGenerator.generateID()
         if (c is Lichka) {
-            c.first.contacts[c.second.userID]?.let {
+            val fstUsr = c.getFirstUser()
+            val sndUsr = c.getSecondUser()
+            fstUsr.contacts[sndUsr.userID]?.let {
                 if (it.isBlocked) {
                     throw IllegalAccessException("User is blocked")
                 }
             }
-            c.second.contacts[c.first.userID]?.let {
+            sndUsr.contacts[fstUsr.userID]?.let {
                 if (it.isBlocked) {
                     throw IllegalAccessException("User is blocked")
                 }
