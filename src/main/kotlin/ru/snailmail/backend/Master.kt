@@ -3,12 +3,28 @@ package ru.snailmail.backend
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main(args: Array<String>) {
+    Database.connect(
+        "jdbc:h2:~/course_2/kotlin/kotlin-spbsu-2019-project-east",
+        driver = "org.h2.Driver")
+
+    transaction {
+        SchemaUtils.create(Users)
+    }
+
     val server = embeddedServer(Netty, port = 8080) {
         module()
     }
     server.start(wait = true)
+}
+
+object Users : Table() {
+    val userId = integer("id").primaryKey()
+    val name = varchar("name", length = 50)
+    val password = integer("password")
 }
 
 object Master {

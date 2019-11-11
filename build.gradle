@@ -8,6 +8,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
     }
 }
 
@@ -53,6 +54,8 @@ dependencies {
     compile "io.ktor:ktor-gson:$ktor_version"
     compile "io.ktor:ktor-auth-jwt:$ktor_version"
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
+    compile 'org.jetbrains.exposed:exposed:0.17.7'
+
 }
 
 //////////////////
