@@ -41,14 +41,17 @@ object Master {
         if (creds.name == "") {
             throw IllegalArgumentException("Empty login")
         }
-        if (users.any { it.name == creds.name }) {
-            throw AlreadyExistsException("User with login ${creds.name} already exists")
-        }
         val id = UIDGenerator.generateID()
-        Users.insert {
-            it[name] = creds.name
-            it[password] = creds.password
-            it[userId] = id.id
+        transaction {
+            Users.selectAll().forEach {
+                if (it[Users.name] == creds.name)
+                    throw AlreadyExistsException("User with login ${creds.name} already exists")
+            }
+            Users.insert {
+                it[name] = creds.name
+                it[password] = creds.password
+                it[userId] = id.id
+            }
         }
         return id
     }
