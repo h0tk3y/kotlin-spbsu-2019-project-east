@@ -1,4 +1,6 @@
 package ru.snailmail.frontend
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import ru.snailmail.backend.*
 
@@ -6,6 +8,8 @@ import io.ktor.auth.UserPasswordCredential
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.jackson.JacksonConverter
+import io.ktor.jackson.jackson
 import kotlinx.css.input
 import java.io.BufferedReader
 import java.io.InputStream
@@ -15,6 +19,8 @@ import java.net.HttpURLConnection
 import java.net.HttpURLConnection.HTTP_OK
 import java.net.URL
 import java.net.URLEncoder
+
+private val objectMapper = jacksonObjectMapper()
 
 class Client {
 
@@ -30,7 +36,19 @@ class Client {
 
     //remove later
     fun getUsers() : String?{
-        return sendGetRequest("users")
+        val rawResponse = sendGetRequest("users")
+        rawResponse ?: return "Error"
+//        val response = objectMapper.readValue<MutableList<User>>(raw_response)
+//        for (i in response) {
+//            println(i.name)
+//        }
+        return rawResponse
+    }
+
+    fun getChats() : String?{
+        val outputBytes = Gson().toJson("").toByteArray(charset("UTF-8"))
+        val rawResponse = sendPostRequest("chats", outputBytes)
+        return rawResponse
     }
 
     fun register(creds: UserPasswordCredential) : String?{
@@ -50,18 +68,16 @@ class Client {
         return res
     }
 
-    fun sendMessage(c: Chat, text: String): UID {
-        if (!::user.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        if (!user.chats.contains(c)) {
-            throw IllegalArgumentException("Chat doesn't exist")
-        }
-        return Master.sendMessage(user, c, text)
+    fun sendMessage(chatId: UID, text: String): String? {
+        val outputBytes = Gson().toJson(SendMessageRequest(chatId, text)).toByteArray(charset("UTF-8"))
+        return sendPostRequest("sendMessage", outputBytes)
     }
 
-    fun createLichka(user: User) {
-        Master.createLichka(this.user, user)
+    //change interface (enter friend's name)
+    fun createLichka(friendId: UID) {
+
+        val outputBytes = Gson().toJson(CreateLichkaRequest(friendId)).toByteArray(charset("UTF-8"))
+        sendPostRequest("createLichka", outputBytes)
     }
 
     fun createPublicChat(name: String) {
@@ -73,6 +89,10 @@ class Client {
 
     fun inviteUser(c: PublicChat, user: User) {
         Master.inviteUser(this.user, c, user)
+    }
+
+    fun addToContacts() {
+
     }
 
     private fun sendGetRequest(param: String) : String? {
@@ -111,7 +131,7 @@ class Client {
             if (responseCode != HTTP_OK) throw java.lang.IllegalArgumentException("Something went wrong")
 
             response = readResponse(inputStream)
-//            println(responseMessage)
+
         }
 
         return response
