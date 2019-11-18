@@ -13,9 +13,25 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import io.ktor.server.testing.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.jupiter.api.BeforeEach
 
 
 class ModuleTest {
+    @BeforeEach
+    fun connect() {
+        val connection = Database.connect(
+            "jdbc:h2:./testdb",
+            driver = "org.h2.Driver"
+        )
+
+        transaction(connection) {
+            SchemaUtils.create(Users)
+        }
+    }
+
     @Test
     fun testWestLohi() = withTestApplication(Application::module) {
         with(handleRequest(HttpMethod.Get, "/")) {
