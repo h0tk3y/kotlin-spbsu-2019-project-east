@@ -5,15 +5,20 @@ import io.ktor.auth.Principal
 
 data class Contact(val userID: UID, var preferredName: String, var isBlocked: Boolean)
 
-class User(initName: String, initPassword: String): Principal {
+class User(initName: String, initPassword: String, id: UID) : Principal {
     var name: String = initName
         private set
     val password: String = initPassword
-    val userID = UIDGenerator.generateID()
-    @JsonManagedReference val chats = mutableListOf<Chat>()
+    val userID = id
+    @JsonManagedReference
+    val chats = mutableListOf<Chat>()
     val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
 
-    fun changeName(newName: String) { name = newName }
+    constructor(initName: String, initPassword: String) : this(initName, initPassword, UIDGenerator.generateID())
+
+    fun changeName(newName: String) {
+        name = newName
+    }
 
     fun addChat(chat: Chat) {
         if (chats.contains(chat)) {

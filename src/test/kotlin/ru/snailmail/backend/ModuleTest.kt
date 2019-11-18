@@ -15,7 +15,9 @@ import org.junit.jupiter.api.Test
 import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 
 
@@ -31,7 +33,12 @@ class ModuleTest {
             SchemaUtils.create(Users)
         }
     }
-
+    @AfterEach
+    fun clearDB() {
+        transaction {
+            Users.deleteAll()
+        }
+    }
     @Test
     fun testWestLohi() = withTestApplication(Application::module) {
         with(handleRequest(HttpMethod.Get, "/")) {

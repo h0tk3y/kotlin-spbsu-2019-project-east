@@ -15,7 +15,6 @@ fun main(args: Array<String>) {
     transaction(connection) {
         SchemaUtils.create(Users)
     }
-
     val server = embeddedServer(Netty, port = 8080) {
         module()
     }
@@ -73,7 +72,13 @@ object Master {
     }
 
     fun findUserByLogin(userLogin: String): User? {
-        return users.find { it.name == userLogin }
+        var user: User? = null
+        Users.selectAll().forEach {
+            if (it[Users.name] == userLogin) {
+                user = User(it[Users.name], it[Users.password], UID(it[Users.userId]))
+            }
+        }
+        return user
     }
 
     fun findUserById(id: UID): User? {
