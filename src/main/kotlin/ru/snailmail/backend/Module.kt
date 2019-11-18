@@ -81,8 +81,8 @@ fun Application.module() {
         post("/login") {
             try {
                 val creds = call.receive<UserPasswordCredential>()
-                val user = Master.logIn(creds)
-                val token = JwtConfig.makeToken(user.userID, creds)
+                val uid = Master.logIn(creds)
+                val token = JwtConfig.makeToken(uid, creds)
                 call.respond(token)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))

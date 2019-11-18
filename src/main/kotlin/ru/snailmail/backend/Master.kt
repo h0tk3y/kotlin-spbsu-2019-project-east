@@ -3,6 +3,7 @@ package ru.snailmail.backend
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.util.url
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -57,12 +58,18 @@ object Master {
     }
 
 
-    fun logIn(creds: UserPasswordCredential): User {
-        val user = users.find { it.name == creds.name } ?: throw DoesNotExistException("Wrong login")
-        if (user.password != creds.password) {
-            throw IllegalArgumentException("Wrong password")
-        }
-        return user
+    fun logIn(creds: UserPasswordCredential): UID {
+        return transaction {
+            var uid: UID? = null
+            Users.selectAll().forEach {
+                if (it[Users.name] == creds.name) {
+                    if (it[Users.password] != creds.password)
+                        throw IllegalArgumentException("Wrong password")
+                    uid = UID(it[Users.userId])
+                }
+            }
+            uid
+        } ?: throw DoesNotExistException("Wrong login")
     }
 
     fun findUserByLogin(userLogin: String): User? {
