@@ -38,6 +38,15 @@ data class BlockOrUnblockUserRequest(val userId: UID)
 
 data class AddOrDeleteContactRequest(val userId: UID)
 
+suspend inline fun <reified T : Any> requestData(f : (T, UserIdPrincipal) -> Unit, call : ApplicationCall) {
+    try {
+        val params = call.receive<T>()
+        val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+        f(params, principal)
+    } catch (e : Exception) {
+        call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
+    }
+}
 
 fun Application.module() {
     install(ContentNegotiation) {
@@ -67,13 +76,13 @@ fun Application.module() {
             }
         }
         get("/users") {
-            call.respondText { objectMapper.writeValueAsString(Master.users) + "\n" }
+            call.respond(Master.users)
         }
         post("/register") {
             try {
                 val creds = call.receive<UserPasswordCredential>()
-                val userId = Master.register(creds)
-                call.respondText("User id: $userId\n")
+                val id = Master.register(creds)
+                call.respond(id)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
@@ -85,158 +94,116 @@ fun Application.module() {
                 val token = JwtConfig.makeToken(user.userID, creds)
                 call.respond(token)
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
             }
         }
         authenticate {
             post("/createLichka") {
-                try {
-                    val params = call.receive<CreateLichkaRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<CreateLichkaRequest>({ params, principal ->
                     val sndUser = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                     val fstUser = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
-                    val chatId = Master.createLichka(fstUser, sndUser)
-                    call.respondText("LichkaId: $chatId\n")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                    val id = Master.createLichka(fstUser, sndUser)
+                    call.respondText("$id")
+                }, call)
             }
             post("/createPublicChat") {
-                try {
-                    val params = call.receive<CreatePublicChatRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<CreatePublicChatRequest>({params, principal ->
                     val owner = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
                     val chatId = Master.createPublicChat(owner, params.chatName)
                     call.respondText("PublicChatId: $chatId\n")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
-                }
+                }, call)
             }
             post("/inviteMember") {
-                try {
-                    val params = call.receive<InviteMemberRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<InviteMemberRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val invited = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
                     Master.inviteUser(user, chat as PublicChat, invited)
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
-                }
+                    call.respondText("OK")
+                }, call)
             }
             post("/sendMessage") {
-                try {
-                    val params = call.receive<SendMessageRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<SendMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
-                    val msgId = Master.sendMessage(user, chat, params.text)
-                    call.respondText("Message id: $msgId\n")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                    Master.sendMessage(user, chat, params.text)
+                    call.respondText("OK")
+                }, call)
             }
             post("/chats") {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respondText(objectMapper.writeValueAsString(user.chats) + "\n")
+                    call.respond(user.chats)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/showMessages") {
-                try {
-                    val params = call.receive<ShowMessageRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<ShowMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
                     if (!chat.members.contains(user)) {
                         throw DoesNotExistException("User not in the chat")
                     }
-                    call.respondText(objectMapper.writeValueAsString(chat.messages.map { it.text }) + "\n")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                    call.respond(chat.messages.map { it.text })
+                }, call)
             }
             post("/deleteMessage") {
-                try {
-                    val params = call.receive<DeleteMessageRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<DeleteMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteMessage(user, Master.findChatById(params.chatId)!!, params.messageId)
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                    call.respond("OK")
+                }, call)
             }
             post("/contacts") {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respondText { objectMapper.writeValueAsString(user.contacts.values) + "\n" }
+                    call.respond(user.contacts.values)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
+                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/changeContactName") {
-                try {
-                    val params = call.receive<ChangeNameRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<ChangeNameRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val contact = user.contacts[params.userId] ?: throw java.lang.IllegalArgumentException()
                     contact.preferredName = params.newName
                     call.respondText("OK")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                }, call)
             }
             post("/blockUser") {
-                try {
-                    val params = call.receive<BlockOrUnblockUserRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<BlockOrUnblockUserRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException("User not found")
                     val contact = user.contacts[params.userId] ?: throw IllegalArgumentException("Contact not found")
                     contact.isBlocked = true
                     call.respondText("OK")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                }, call)
             }
             post("/unblockUser") {
-                try {
-                    val params = call.receive<BlockOrUnblockUserRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<BlockOrUnblockUserRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val contact = user.contacts[params.userId] ?: throw java.lang.IllegalArgumentException()
                     contact.isBlocked = false
                     call.respondText("OK")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                }, call)
             }
             post("addContact") {
-                try {
-                    val params = call.receive<AddOrDeleteContactRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<AddOrDeleteContactRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val other = Master.findUserById(params.userId) ?: throw java.lang.IllegalArgumentException()
                     user.addContact(other)
                     call.respondText("OK")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                }, call)
             }
             post("deleteContact") {
-                try {
-                    val params = call.receive<AddOrDeleteContactRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<AddOrDeleteContactRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val other = Master.findUserById(params.userId) ?: throw java.lang.IllegalArgumentException()
                     user.deleteContact(other)
                     call.respondText("OK")
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
-                }
+                }, call)
             }
         }
     }

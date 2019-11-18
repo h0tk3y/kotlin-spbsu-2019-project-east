@@ -61,10 +61,14 @@ class PublicChat(var name : String, @JsonBackReference val owner : User) : Chat(
 }
 
 
-class Lichka(@JsonBackReference val first : User, @JsonBackReference val second: User) : Chat() {
+class Lichka(first : User, second: User) : Chat() {
     init {
         members.addAll(listOf(first, second))
         first.addChat(this)
         second.addChat(this)
     }
+    @JsonIgnore
+    fun getFirstUser(): User = members[0]
+    @JsonIgnore
+    fun getSecondUser(): User = members[1]
 }
