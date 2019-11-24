@@ -39,9 +39,9 @@ object Data {
         val messageId = long("messageId")
     }
 
-    fun findUserIdByLogin(userLogin: String): UID? {
+    fun findUserByLogin(userLogin: String): User? {
         Users.select { Users.name eq userLogin }.firstOrNull()?.let {
-            return UID(it[Users.userId])
+            return User(it[Users.name], it[Users.password], UID(it[Users.userId]))
         }
         return null
     }
@@ -63,8 +63,6 @@ object Data {
 
     fun userInChat(userId: UID, chatId: UID): Boolean =
         ChatsToUsers.select { (ChatsToUsers.chatId eq chatId.id) and (ChatsToUsers.userId eq userId.id) }.empty()
-
-    fun findUserByLogin(userLogin: String): User? = TODO()
 
     fun findContact(fstId: UID, sndId: UID): Contact? = TODO()
 
