@@ -12,6 +12,7 @@ fun main(args: Array<String>) {
         driver = "org.h2.Driver")
 
     transaction(connection) {
+        Data.clear()
         Data.init()
     }
     val server = embeddedServer(Netty, port = 8080) {

@@ -54,7 +54,7 @@ class Client {
         if (!::user.isInitialized) {
             throw IllegalAccessException("Not registered")
         }
-        if (!user.chats.contains(c)) {
+        if (!Data.userInChat(user.userID, c.chatID)) {
             throw IllegalArgumentException("Chat doesn't exist")
         }
         return Master.sendMessage(user, c, text)
