@@ -9,7 +9,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 fun main(args: Array<String>) {
     val connection = Database.connect(
         "jdbc:h2:./testdb",
-        driver = "org.h2.Driver")
+        driver = "org.h2.Driver"
+    )
 
     transaction(connection) {
         Data.clear()
@@ -30,7 +31,7 @@ object Master {
         }
         val id = UIDGenerator.generateID()
         transaction {
-            if (Data.findUserIdByLogin(creds.name) != null) {
+            if (Data.findUserByLogin(creds.name) != null) {
                 throw AlreadyExistsException("User with login ${creds.name} already exists")
             }
             Data.addUser(id.id, creds.name, creds.password)
@@ -38,18 +39,29 @@ object Master {
         return id
     }
 
-    fun findChatById(id: UID): Chat? = Data.findChatById(id)
+    fun findChatById(id: UID): Chat? =
+        transaction {
+            Data.findChatById(id)
+        }
 
-    fun findMessageById(id: UID): Message? = Data.findMessageById(id)
+    fun findMessageById(id: UID): Message? =
+        transaction {
+            Data.findMessageById(id)
+        }
 
-    fun findUserById(id: UID): User? = transaction { Data.findUserById(id) }
+    fun findUserById(id: UID): User? =
+        transaction {
+            Data.findUserById(id)
+        }
 
-    fun findUserByLogin(userLogin: String): User? = Data.findUserByLogin(userLogin)
+    fun findUserByLogin(userLogin: String): User? =
+        transaction {
+            Data.findUserByLogin(userLogin)
+        }
 
     fun logIn(creds: UserPasswordCredential): UID =
         transaction {
-            var uid: UID? = null
-            val id = Data.findUserIdByLogin(creds.name) ?: throw java.lang.IllegalArgumentException("Wrong login")
+            val id = Data.findUserByLogin(creds.name)?.userID ?: throw java.lang.IllegalArgumentException("Wrong login")
             if (Data.findUserById(id)!!.password != creds.password) {
                 throw IllegalArgumentException("Wrong password")
             }

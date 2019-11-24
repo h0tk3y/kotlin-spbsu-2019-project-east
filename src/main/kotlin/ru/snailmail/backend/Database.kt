@@ -47,9 +47,9 @@ object Data {
     }
     // TODO: add references
 
-    fun findUserIdByLogin(userLogin: String): UID? {
+    fun findUserByLogin(userLogin: String): User? {
         Users.select { Users.name eq userLogin }.firstOrNull()?.let {
-            return UID(it[Users.userId])
+            return User(it[Users.name], it[Users.password], UID(it[Users.userId]))
         }
         return null
     }
@@ -71,13 +71,6 @@ object Data {
 
     fun userInChat(userId: UID, chatId: UID): Boolean =
         ChatsToUsers.select { (ChatsToUsers.chatId eq chatId.id) and (ChatsToUsers.userId eq userId.id) }.empty()
-
-    fun findUserByLogin(userLogin: String): User? {
-        Users.select { Users.name eq userLogin }.singleOrNull()?.let {
-            return User(it[Users.name], it[Users.password], UID(it[Users.userId]))
-        }
-        return null
-    }
 
     fun findContact(fstId: UID, sndId: UID): Contact? {
         Contacts.select { (Contacts.ownerId eq fstId.id) and (Contacts.userId eq sndId.id) }.singleOrNull()?.let {
