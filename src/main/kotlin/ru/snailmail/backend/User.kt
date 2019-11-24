@@ -10,41 +10,6 @@ class User(initName: String, initPassword: String, id: UID) : Principal {
         private set
     val password: String = initPassword
     val userID = id
-    @JsonManagedReference
-    val chats = mutableListOf<Chat>()
-    val contacts = mutableMapOf<UID, Contact>() // Contact by its ID
 
     constructor(initName: String, initPassword: String) : this(initName, initPassword, UIDGenerator.generateID())
-
-    fun changeName(newName: String) {
-        name = newName
-    }
-
-    fun addChat(chat: Chat) {
-        if (chats.contains(chat)) {
-            throw AlreadyExistsException()
-        }
-        chats.add(chat)
-    }
-
-    fun deleteChat(chat: Chat) {
-        if (!chats.contains(chat)) {
-            throw DoesNotExistException()
-        }
-        chats.remove(chat)
-    }
-
-    fun addContact(user: User) {
-        if (contacts.contains(user.userID)) {
-            throw AlreadyExistsException()
-        }
-        contacts[user.userID] = Contact(user.userID, user.name, false)
-    }
-
-    fun deleteContact(user: User) {
-        if (!contacts.contains(user.userID)) {
-            throw DoesNotExistException()
-        }
-        contacts.remove(user.userID)
-    }
 }

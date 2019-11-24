@@ -67,7 +67,7 @@ fun Application.module() {
             }
         }
         get("/users") {
-            call.respond(Master.users)
+            call.respond(Data.getUsers())
         }
         post("/register") {
             try {
@@ -141,7 +141,7 @@ fun Application.module() {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respond(user.chats)
+                    call.respond(Data.getUserChats(user.userID))
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
@@ -152,10 +152,10 @@ fun Application.module() {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
-                    if (!chat.members.contains(user)) {
+                    if (!Data.findChatMembers(chat.chatID).contains(user)) {
                         throw DoesNotExistException("User not in the chat")
                     }
-                    call.respond(chat.messages.map { it.text })
+                    call.respond(Data.findChatMessages(chat.chatID).map { it.text })
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
@@ -175,7 +175,7 @@ fun Application.module() {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respond(user.contacts.values)
+                    call.respond(Data.getUserContacts(user.userID))
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
@@ -185,8 +185,8 @@ fun Application.module() {
                     val params = call.receive<ChangeNameRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    val contact = user.contacts[params.userId] ?: throw java.lang.IllegalArgumentException()
-                    contact.preferredName = params.newName
+                    if (!Data.changePreferredName(user.userID, params.userId, params.newName))
+                        throw java.lang.IllegalArgumentException()
                     call.respondText("OK")
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
@@ -197,8 +197,8 @@ fun Application.module() {
                     val params = call.receive<BlockOrUnblockUserRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException("User not found")
-                    val contact = user.contacts[params.userId] ?: throw IllegalArgumentException("Contact not found")
-                    contact.isBlocked = true
+                    if (!Data.blockUser(user.userID, params.userId))
+                        throw IllegalArgumentException("Contact not found")
                     call.respondText("OK")
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
@@ -209,8 +209,8 @@ fun Application.module() {
                     val params = call.receive<BlockOrUnblockUserRequest>()
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    val contact = user.contacts[params.userId] ?: throw java.lang.IllegalArgumentException()
-                    contact.isBlocked = false
+                    if (!Data.unblockUser(user.userID, params.userId))
+                        throw IllegalArgumentException("Contact not found")
                     call.respondText("OK")
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
@@ -222,7 +222,7 @@ fun Application.module() {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val other = Master.findUserById(params.userId) ?: throw java.lang.IllegalArgumentException()
-                    user.addContact(other)
+                    Data.addContact(user.userID, other.userID)
                     call.respondText("OK")
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
@@ -234,7 +234,7 @@ fun Application.module() {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val other = Master.findUserById(params.userId) ?: throw java.lang.IllegalArgumentException()
-                    user.deleteContact(other)
+                    Data.deleteContact(user.userID, other.userID)
                     call.respondText("OK")
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))

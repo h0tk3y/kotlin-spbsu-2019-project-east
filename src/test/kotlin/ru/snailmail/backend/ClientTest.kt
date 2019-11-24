@@ -67,7 +67,7 @@ class ClientTest {
         assertThrows(AlreadyExistsException::class.java) { client.createLichka(useressa) }
     }
 
-    @Disabled
+    /*@Disabled
     @Test
     fun testCreatePublicChat() {
         val client = createClient("Cobain", "Rvanina")
@@ -106,7 +106,7 @@ class ClientTest {
     val password3 = "password"
     val text1 = "hello, memos"
     val text2 = "hello, kekos"
-    val text3 = "hello, abrikos"
+    val text3 = "hello, abrikos"*/
 
     private fun createClient(name: String, password: String): Client {
         val client = Client()
@@ -115,7 +115,7 @@ class ClientTest {
         return client
     }
 
-    @Disabled
+    /*@Disabled
     @Test
     fun testPrivateChat() {
         val client1 = createClient(login1, password1)
@@ -154,5 +154,5 @@ class ClientTest {
         assertEquals(client2.user.chats, mutableListOf(chat))
         assertEquals(client3.user.chats, mutableListOf(chat))
         assertEquals(chat.messages.map { it.text }, mutableListOf(text1, text2, text3))
-    }
+    }*/
 }
