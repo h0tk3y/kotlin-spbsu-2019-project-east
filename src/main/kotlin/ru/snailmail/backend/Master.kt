@@ -35,63 +35,56 @@ object Master {
         }
         val id = UIDGenerator.generateID()
         transaction {
-            Users.selectAll().forEach {
-                if (it[Users.name] == creds.name)
-                    throw AlreadyExistsException("User with login ${creds.name} already exists")
+            if (findUserIdByLogin(this, creds.name) != null) {
+                throw AlreadyExistsException("User with login ${creds.name} already exists")
             }
-            Users.insert {
-                it[name] = creds.name
-                it[password] = creds.password
-                it[userId] = id.id
-            }
+            addUser(this, id.id, creds.name, creds.password)
         }
         return id
     }
 
 
-    fun logIn(creds: UserPasswordCredential): UID {
-        return transaction {
+    fun logIn(creds: UserPasswordCredential): UID =
+        transaction {
             var uid: UID? = null
-            Users.selectAll().forEach {
-                if (it[Users.name] == creds.name) {
-                    if (it[Users.password] != creds.password)
-                        throw IllegalArgumentException("Wrong password")
-                    uid = UID(it[Users.userId])
-                }
+            val id = findUserIdByLogin(this, creds.name) ?: throw java.lang.IllegalArgumentException("Wrong login")
+            if (findUserById(this, id)!!.password != creds.password) {
+                throw IllegalArgumentException("Wrong password")
             }
-            uid
-        } ?: throw DoesNotExistException("Wrong login")
-    }
+            id
+        }
 
-    fun findUserByLogin(userLogin: String): User? = transaction { findUserByLogin(this, userLogin) }
+    fun findUserByLogin(userLogin: String): User? = TODO()
 
     fun findUserById(id: UID): User? = transaction { findUserById(this, id) }
 
-    fun findChatById(id: UID): Chat? = transaction { findChatById(this, id) }
+    fun findChatById(id: UID): Chat? = TODO()
 
-    fun findMessageById(c: Chat, id: UID) = transaction { findMessageById(this, c, id) }
+    fun findMessageById(c: Chat, id: UID): Message? = TODO()
 
     fun sendMessage(user: User, c: Chat, text: String): UID {
-        if (!c.members.contains(user)) {
-            throw DoesNotExistException("User not in the chat")
-        }
-        val id = UIDGenerator.generateID()
-        if (c is Lichka) {
-            val fstUsr = c.getFirstUser()
-            val sndUsr = c.getSecondUser()
-            fstUsr.contacts[sndUsr.userID]?.let {
-                if (it.isBlocked) {
-                    throw IllegalAccessException("User is blocked")
+        transaction {
+            if (!userInChat(this, user.userID, c.chatID)) {
+                throw DoesNotExistException("User not in the chat")
+            }
+            val id = UIDGenerator.generateID()
+            if (c is Lichka) {
+                val fstUsr = c.getFirstUser()
+                val sndUsr = c.getSecondUser()
+                fstUsr.contacts[sndUsr.userID]?.let {
+                    if (it.isBlocked) {
+                        throw IllegalAccessException("User is blocked")
+                    }
+                }
+                sndUsr.contacts[fstUsr.userID]?.let {
+                    if (it.isBlocked) {
+                        throw IllegalAccessException("User is blocked")
+                    }
                 }
             }
-            sndUsr.contacts[fstUsr.userID]?.let {
-                if (it.isBlocked) {
-                    throw IllegalAccessException("User is blocked")
-                }
-            }
+            c.sendMessage(Message(id, user.userID, text))
+            id
         }
-        c.sendMessage(Message(id, user.userID, text))
-        return id
     }
 
     fun deleteMessage(user: User, c: Chat, messageId: UID) {

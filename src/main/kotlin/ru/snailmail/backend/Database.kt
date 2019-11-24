@@ -38,10 +38,10 @@ object MessagesToChats : Table() {
     val messageId = long("messageId").primaryKey()
 }
 
-fun findUserByLogin(t: Transaction, userLogin: String): User? = TODO()
+fun findUserIdByLogin(t: Transaction, userLogin: String): UID? = TODO()
+
+fun addUser(t: Transaction, id: Long, login: String, password: String): Unit = TODO()
 
 fun findUserById(t: Transaction, id: UID): User? = TODO()
 
-fun findChatById(t: Transaction, id: UID): Chat? = TODO()
-
-fun findMessageById(t: Transaction, c: Chat, id: UID): Message? = TODO()
+fun userInChat(t: Transaction, userId: UID, chatId: UID): Boolean = TODO()
