@@ -67,7 +67,7 @@ fun Application.module() {
             }
         }
         get("/users") {
-            call.respond(Data.getUsers().map { it.name })
+            call.respond(Master.getUsers().map { it.name })
         }
         post("/register") {
             try {

@@ -59,6 +59,11 @@ object Master {
             Data.findUserByLogin(userLogin)
         }
 
+    fun getUsers(): List<User> =
+        transaction {
+            Data.getUsers()
+        }
+
     fun logIn(creds: UserPasswordCredential): UID =
         transaction {
             val id = Data.findUserByLogin(creds.name)?.userID ?: throw java.lang.IllegalArgumentException("Wrong login")
