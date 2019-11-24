@@ -70,7 +70,7 @@ class ConsoleApp {
 
     private fun createLichka() {
         println("Enter your friend's name:")
-        var name = readLine()
+
         createLichka()
     }
 
