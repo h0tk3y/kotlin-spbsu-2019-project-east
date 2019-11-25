@@ -143,10 +143,10 @@ object Master {
         transaction { Data.changePreferredName(userId, otherId, newName) }
 
     fun blockUser(userId: UID, otherId: UID): Boolean =
-        transaction { blockUser(userId, otherId) }
+        transaction { Data.blockUser(userId, otherId) }
 
     fun unblockUser(userId: UID, otherId: UID): Boolean =
-        transaction { unblockUser(userId, otherId) }
+        transaction { Data.unblockUser(userId, otherId) }
 
     fun addContact(ownId: UID, otherId: UID) =
         transaction { Data.addContact(ownId, otherId) }
