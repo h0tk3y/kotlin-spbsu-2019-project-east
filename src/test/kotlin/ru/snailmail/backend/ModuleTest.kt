@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test
 
 import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.deleteAll
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -66,10 +66,10 @@ class ModuleTest {
     }
 
     private fun userIdByResponse(response: TestApplicationResponse) : UID {
-        return UID(response.content.toString().drop(16).take(response.content.toString().drop(16).length - 2).toLong())
+        return jacksonObjectMapper().readValue<UID>(response.content.toString())
     }
     private fun lichkaIdByResponse(response: TestApplicationResponse) : UID {
-        return UID(response.content.toString().drop(17).take(response.content.toString().drop(17).length - 2).toLong())
+        return jacksonObjectMapper().readValue<UID>(response.content.toString())
     }
     @Disabled
     @Test
