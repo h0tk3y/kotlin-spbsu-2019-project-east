@@ -57,7 +57,7 @@ class ClientTest {
 
     //We can't create lichka from client and console app. So we'll add this later
 
-    @Disabled
+    /*@Disabled
     @Test
     fun testCreateLichka() {
         val client = createClient("Sid", "pistol")
@@ -65,7 +65,7 @@ class ClientTest {
         val useressa = User("Nancy", "gun")
         assertDoesNotThrow { client.createLichka(useressa) }
         assertThrows(AlreadyExistsException::class.java) { client.createLichka(useressa) }
-    }
+    }*/
 
     /*@Disabled
     @Test

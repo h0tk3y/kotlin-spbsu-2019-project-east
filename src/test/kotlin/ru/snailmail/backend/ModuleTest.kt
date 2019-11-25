@@ -1,5 +1,7 @@
 package ru.snailmail.backend
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import io.ktor.application.Application
 import io.ktor.auth.UserPasswordCredential
@@ -9,8 +11,6 @@ import org.junit.jupiter.api.Test
 
 import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.Database
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach

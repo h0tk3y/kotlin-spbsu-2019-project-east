@@ -48,7 +48,6 @@ suspend inline fun <reified T : Any> requestData(f : (T, UserIdPrincipal) -> Uni
     }
 }
 
-
 fun Application.module() {
     install(ContentNegotiation) {
         jackson {
@@ -82,8 +81,8 @@ fun Application.module() {
         post("/register") {
             try {
                 val creds = call.receive<UserPasswordCredential>()
-                val userId = Master.register(creds)
-                call.respond(userId)
+                val id = Master.register(creds)
+                call.respond(id)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Conflict, "error: ".plus(e.message))
             }
@@ -141,17 +140,13 @@ fun Application.module() {
                 }
             }
             post("/showMessages") {
-                try {
-                    val params = call.receive<ShowMessageRequest>()
-                    val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
+                requestData<ShowMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     if (!Master.findChatMembers(params.chatId).contains(user)) {
                         throw DoesNotExistException("User not in the chat")
                     }
                     call.respond(Master.findChatMessages(params.chatId).map { it.text })
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
-                }
+                }, call)
             }
             post("/deleteMessage") {
                 requestData<DeleteMessageRequest>({params, principal ->
