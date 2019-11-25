@@ -1,10 +1,10 @@
 package ru.snailmail.backend
 
-data class Message(val id : UID, val from: UID, var text: String) {
-    var deleted = false
-        private set
-    var edited = false
-        private set
+data class Message(val id : UID, val from: UID, var text: String, var deleted: Boolean, var edited: Boolean) {
+
+    constructor(id: UID,  from: UID, text: String) :
+            this(id, from, text, false, false)
+
     // TODO: add time
     private val attachments = mutableListOf<Attachment>()
 

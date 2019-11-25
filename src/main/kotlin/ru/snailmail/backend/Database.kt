@@ -36,6 +36,8 @@ object Data {
 
     object Messages : Table() {
         val id = long("id").primaryKey()
+        val from = long("from")
+        val text = varchar("text", length=100)
         val deleted = bool("deleted")
         val edited = bool("edited")
         // TODO: add attachments
@@ -83,6 +85,8 @@ object Data {
     fun addMessage(chId: UID, m: Message): Unit {
         Messages.insert {
             it[id] = m.id.id
+            it[text] = m.text
+            it[from] = m.from.id
             it[deleted] = m.deleted
             it[edited] = m.edited
         }
@@ -142,19 +146,38 @@ object Data {
     fun getUsers(): List<User> =
         Users.selectAll().map { User(it[Users.name], it[Users.password], UID(it[Users.userId])) }
 
+    fun findMessageById(id: UID): Message? =
+        Messages.select { Messages.id eq id.id }.singleOrNull()?.let {
+            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted], it[Messages.edited])
+        }
+
+    fun getUserChats(uId: UID): List<Chat> =
+        ChatsToUsers.select { ChatsToUsers.userId eq uId.id }.map {
+            findChatById(UID(it[ChatsToUsers.chatId]))
+                ?: throw DatabaseInternalException("Illegal chatId in ChatsToUsers")
+        }
+
+    fun findChatMembers(chId: UID): List<User> =
+        ChatsToUsers.select { ChatsToUsers.chatId eq chId.id }.map {
+            findUserById(UID(it[ChatsToUsers.userId]))
+                ?: throw DatabaseInternalException("Illegal userId in ChatsToUsers")
+        }
+
+    fun findChatMessages(chId: UID): List<Message> =
+        MessagesToChats.select { MessagesToChats.chatId eq chId.id }.map {
+            findMessageById(UID(it[MessagesToChats.messageId]))
+                ?: throw DatabaseInternalException("Illegal messageId in MessagesToChats")
+        }
+
+    fun findLichkaByMembers(userId1: UID, userId2: UID): UID? =
+        Lichkas.select {
+            ((Lichkas.fstId eq userId1.id) and (Lichkas.sndId eq userId2.id)) or
+                    ((Lichkas.fstId eq userId2.id) and (Lichkas.sndId eq userId1.id))
+        }.singleOrNull()?.let { UID(it[Lichkas.id]) }
+
     fun findChatById(id: UID): Chat? = TODO()
 
-    fun findMessageById(id: UID): Message? = TODO()
-
-    fun findChatMembers(chatId: UID): List<User> = TODO()
-
-    fun findChatMessages(chatId: UID): List<Message> = TODO()
-
-    fun getUserChats(userId: UID): List<Chat> = TODO()
-
     fun deleteMessage(msgId: UID): Unit = TODO()
-
-    fun findLichkaByMembers(userId1: UID, userId2: UID): UID? = TODO()
 
     fun deleteContact(userId: UID, otherId: UID): Unit = TODO()
 
