@@ -82,7 +82,7 @@ object Data {
         return null
     }
 
-    fun addMessage(chId: UID, m: Message): Unit {
+    fun addMessage(chId: UID, m: Message) {
         Messages.insert {
             it[id] = m.id.id
             it[text] = m.text
@@ -96,7 +96,7 @@ object Data {
         }
     }
 
-    fun addLichka(chId: UID, userId1: UID, userId2: UID): Unit {
+    fun addLichka(chId: UID, userId1: UID, userId2: UID) {
         Lichkas.insert {
             it[id] = chId.id
         }
@@ -110,7 +110,7 @@ object Data {
         }
     }
 
-    fun addPublicChat(chId: UID, chName: String, ownerId: UID): Unit {
+    fun addPublicChat(chId: UID, chName: String, ownerId: UID) {
         PublicChats.insert {
             it[id] = chId.id
             it[name] = chName
@@ -122,14 +122,14 @@ object Data {
         }
     }
 
-    fun addUserToChat(chId: UID, uId: UID): Unit {
+    fun addUserToChat(chId: UID, uId: UID) {
         ChatsToUsers.insert {
             it[chatId] = chId.id
             it[userId] = uId.id
         }
     }
 
-    fun addContact(ownId: UID, otherId: UID): Unit {
+    fun addContact(ownId: UID, otherId: UID) {
         Contacts.insert {
             it[ownerId] = ownId.id
             it[userId] = otherId.id

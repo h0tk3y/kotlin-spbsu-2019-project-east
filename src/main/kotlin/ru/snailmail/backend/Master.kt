@@ -39,31 +39,6 @@ object Master {
         return id
     }
 
-    fun findChatById(id: UID): Chat? =
-        transaction {
-            Data.findChatById(id)
-        }
-
-    fun findMessageById(id: UID): Message? =
-        transaction {
-            Data.findMessageById(id)
-        }
-
-    fun findUserById(id: UID): User? =
-        transaction {
-            Data.findUserById(id)
-        }
-
-    fun findUserByLogin(userLogin: String): User? =
-        transaction {
-            Data.findUserByLogin(userLogin)
-        }
-
-    fun getUsers(): List<User> =
-        transaction {
-            Data.getUsers()
-        }
-
     fun logIn(creds: UserPasswordCredential): UID =
         transaction {
             val id = Data.findUserByLogin(creds.name)?.userID ?: throw java.lang.IllegalArgumentException("Wrong login")
@@ -136,4 +111,46 @@ object Master {
             Data.addUserToChat(c.chatID, newMember.userID)
         }
     }
+
+    fun findChatById(id: UID): Chat? =
+        transaction { Data.findChatById(id) }
+
+    fun findMessageById(id: UID): Message? =
+        transaction { Data.findMessageById(id) }
+
+    fun findUserById(id: UID): User? =
+        transaction { Data.findUserById(id) }
+
+    fun findUserByLogin(userLogin: String): User? =
+        transaction { Data.findUserByLogin(userLogin) }
+
+    fun getUsers(): List<User> =
+        transaction { Data.getUsers() }
+
+    fun getUserChats(userId: UID): List<Chat> =
+        transaction { Data.getUserChats(userId) }
+
+    fun findChatMembers(chatId: UID): List<User> =
+        transaction { Data.findChatMembers(chatId) }
+
+    fun findChatMessages(chatId: UID): List<Message> =
+        transaction { Data.findChatMessages(chatId) }
+
+    fun getUserContacts(userId: UID): List<Contact> =
+        transaction { Data.getUserContacts(userId) }
+
+    fun changePreferredName(userId: UID, otherId: UID, newName: String) =
+        transaction { Data.changePreferredName(userId, otherId, newName) }
+
+    fun blockUser(userId: UID, otherId: UID): Boolean =
+        transaction { blockUser(userId, otherId) }
+
+    fun unblockUser(userId: UID, otherId: UID): Boolean =
+        transaction { unblockUser(userId, otherId) }
+
+    fun addContact(ownId: UID, otherId: UID) =
+        transaction { Data.addContact(ownId, otherId) }
+
+    fun deleteContact(userId: UID, otherId: UID): Unit =
+        transaction { Data.deleteContact(userId, otherId) }
 }
