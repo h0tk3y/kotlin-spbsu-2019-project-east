@@ -40,14 +40,15 @@ object Data {
         val text = varchar("text", length=100)
         val deleted = bool("deleted")
         val edited = bool("edited")
-        // TODO: add attachments
+        // TODO: add attachments.
     }
 
     object MessagesToChats : Table() {
         val chatId = long("chatId")
         val messageId = long("messageId")
     }
-    // TODO: add references
+    // TODO: add references.
+    // TODO: make Database visible only from Master.
 
     fun findUserByLogin(userLogin: String): User? {
         Users.select { Users.name eq userLogin }.firstOrNull()?.let {
@@ -175,17 +176,39 @@ object Data {
                     ((Lichkas.fstId eq userId2.id) and (Lichkas.sndId eq userId1.id))
         }.singleOrNull()?.let { UID(it[Lichkas.id]) }
 
-    fun findChatById(id: UID): Chat? = TODO()
+    fun findChatById(id: UID): Chat? =
+        Lichkas.select { (Lichkas.id eq id.id) }.singleOrNull()?.let {
+            val fst = findUserById(UID(it[Lichkas.fstId])) ?: return null
+            val snd = findUserById(UID(it[Lichkas.sndId])) ?: return null
+            Lichka(fst, snd)
+        } ?: PublicChats.select { (PublicChats.id eq id.id) }.singleOrNull()?.let {
+            val owner = findUserById(UID(it[PublicChats.owner])) ?: return null
+            PublicChat(it[PublicChats.name], owner)
+        }
 
-    fun deleteMessage(msgId: UID): Unit = TODO()
+    fun deleteMessage(msgId: UID): Boolean =
+        Messages.update({ Messages.id eq msgId.id }) {
+            it[deleted] = true
+            it[text] = ""
+        } > 0
 
-    fun deleteContact(userId: UID, otherId: UID): Unit = TODO()
+    fun deleteContact(ownerId: UID, otherId: UID): Boolean =
+        Contacts.deleteWhere { (Contacts.ownerId eq ownerId.id) and (Contacts.userId eq otherId.id) } > 0
 
-    fun changePreferredName(userId: UID, otherId: UID, newName: String): Boolean = TODO()
+    fun changePreferredName(ownerId: UID, otherId: UID, newName: String): Boolean =
+        Contacts.update({ (Contacts.ownerId eq ownerId.id) and (Contacts.userId eq otherId.id) }) {
+            it[preferredName] = newName
+        } > 0
 
-    fun blockUser(userId: UID, otherId: UID): Boolean = TODO()
+    fun blockUser(ownerId: UID, otherId: UID): Boolean =
+        Contacts.update({ (Contacts.ownerId eq ownerId.id) and (Contacts.userId eq otherId.id) }) {
+            it[isBlocked] = true
+        } > 0
 
-    fun unblockUser(userId: UID, otherId: UID): Boolean = TODO()
+    fun unblockUser(ownerId: UID, otherId: UID): Boolean =
+        Contacts.update({ (Contacts.ownerId eq ownerId.id) and (Contacts.userId eq otherId.id) }) {
+            it[isBlocked] = false
+        } > 0
 
     fun init() {
         SchemaUtils.create(Users)
