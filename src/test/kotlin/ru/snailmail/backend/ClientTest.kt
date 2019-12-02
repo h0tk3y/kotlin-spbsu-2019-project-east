@@ -34,8 +34,9 @@ class ClientTest {
         val client = Client()
         assertDoesNotThrow {client.register(UserPasswordCredential("Grisha", "my password"))}
         assertNotNull{Master.findUserByLogin("Grisha")}
-        assertTrue(Master.findUserByLogin("Grisha")!!.name == "Grisha" &&
-                Master.findUserByLogin("Grisha")!!.password == "my password")
+        val user = Master.findUserByLogin("Grisha")
+        assertTrue(user!!.name == "Grisha" &&
+                user.passwordHash == Master.hash("my password", user.userID))
         assertThrows(IllegalArgumentException::class.java) {
             client.register(UserPasswordCredential("", "password"))
         }

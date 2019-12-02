@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
 object Master {
     fun clear() = Data.clear()
 
-    private fun hash(s: String, userId: UID) = (userId.id.toString() + s).hashCode()
+    fun hash(s: String, userId: UID) = (userId.id.toString() + s).hashCode()
 
     fun register(creds: UserPasswordCredential): UID {
         if (creds.name == "") {
