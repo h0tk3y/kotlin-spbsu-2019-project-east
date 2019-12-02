@@ -25,6 +25,7 @@ fun main(args: Array<String>) {
 object Master {
     fun clear() = Data.clear()
 
+    // TODO: make this function private but visible in tests?
     fun hash(s: String, userId: UID) = (userId.id.toString() + s).hashCode()
 
     fun register(creds: UserPasswordCredential): UID {

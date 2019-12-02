@@ -1,11 +1,12 @@
 package ru.snailmail.backend
 
-data class Message(val id : UID, val from: UID, var text: String, var deleted: Boolean, var edited: Boolean) {
+import java.util.*
 
-    constructor(id: UID,  from: UID, text: String) :
-            this(id, from, text, false, false)
+data class Message(val id : UID, val from: UID, var text: String, var deleted: Boolean, var edited: Boolean, val time: Date) {
 
-    // TODO: add time
+    constructor(id: UID,  from: UID, text: String):
+            this(id, from, text, false, false, Calendar.getInstance().time)
+
     private val attachments = mutableListOf<Attachment>()
 
     fun addAttachment(attachment: Attachment) {
