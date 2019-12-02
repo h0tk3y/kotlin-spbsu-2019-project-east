@@ -7,7 +7,7 @@ object Data {
     object Users : Table() {
         val userId = long("id").primaryKey()
         val name = varchar("name", length = 50).primaryKey()
-        val password = varchar("password", length = 50)
+        val passwordHash = integer("passwordHash")
     }
 
     object Contacts : Table() {
@@ -52,22 +52,22 @@ object Data {
 
     fun findUserByLogin(userLogin: String): User? {
         Users.select { Users.name eq userLogin }.firstOrNull()?.let {
-            return User(it[Users.name], it[Users.password], UID(it[Users.userId]))
+            return User(it[Users.name], it[Users.passwordHash], UID(it[Users.userId]))
         }
         return null
     }
 
-    fun addUser(id: Long, userLogin: String, userPassword: String) {
+    fun addUser(id: Long, userLogin: String, userPasswordHash: Int) {
         Users.insert {
             it[userId] = id
             it[name] = userLogin
-            it[password] = userPassword
+            it[passwordHash] = userPasswordHash
         }
     }
 
     fun findUserById(id: UID): User? {
         Users.select { Users.userId eq id.id }.singleOrNull()?.let {
-            return User(it[Users.name], it[Users.password], id)
+            return User(it[Users.name], it[Users.passwordHash], id)
         }
         return null
     }
@@ -145,7 +145,7 @@ object Data {
         }
 
     fun getUsers(): List<User> =
-        Users.selectAll().map { User(it[Users.name], it[Users.password], UID(it[Users.userId])) }
+        Users.selectAll().map { User(it[Users.name], it[Users.passwordHash], UID(it[Users.userId])) }
 
     fun findMessageById(id: UID): Message? =
         Messages.select { Messages.id eq id.id }.singleOrNull()?.let {

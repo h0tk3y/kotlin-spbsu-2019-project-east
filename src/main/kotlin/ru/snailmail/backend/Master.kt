@@ -25,6 +25,8 @@ fun main(args: Array<String>) {
 object Master {
     fun clear() = Data.clear()
 
+    private fun hash(s: String, userId: UID) = (userId.id.toString() + s).hashCode()
+
     fun register(creds: UserPasswordCredential): UID {
         if (creds.name == "") {
             throw IllegalArgumentException("Empty login")
@@ -34,7 +36,7 @@ object Master {
             if (Data.findUserByLogin(creds.name) != null) {
                 throw AlreadyExistsException("User with login ${creds.name} already exists")
             }
-            Data.addUser(id.id, creds.name, creds.password)
+            Data.addUser(id.id, creds.name, hash(creds.password, id))
         }
         return id
     }
@@ -42,7 +44,7 @@ object Master {
     fun logIn(creds: UserPasswordCredential): UID =
         transaction {
             val id = Data.findUserByLogin(creds.name)?.userID ?: throw java.lang.IllegalArgumentException("Wrong login")
-            if (Data.findUserById(id)!!.password != creds.password) {
+            if (Data.findUserById(id)!!.passwordHash != hash(creds.password, id)) {
                 throw IllegalArgumentException("Wrong password")
             }
             id
@@ -72,10 +74,14 @@ object Master {
             id
         }
 
-    fun deleteMessage(user: User, c: Chat, messageId: UID) =
+    fun deleteMessage(user: User, messageId: UID) {
         transaction {
+            val msg = Data.findMessageById(messageId) ?: throw IllegalArgumentException("No such message with given id")
+            if (msg.from != user.userID)
+                throw IllegalAccessException("Message does not belong to the specified user")
             Data.deleteMessage(messageId)
         }
+    }
 
     fun createLichka(user1: User, user2: User): UID {
         if (user1 == user2) {
@@ -92,7 +98,6 @@ object Master {
     }
 
     fun createPublicChat(owner: User, name: String): UID {
-        val chat = PublicChat(name, owner)
         return transaction {
             val id = UIDGenerator.generateID()
             Data.addPublicChat(id, name, owner.userID)

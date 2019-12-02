@@ -151,7 +151,7 @@ fun Application.module() {
             post("/deleteMessage") {
                 requestData<DeleteMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    Master.deleteMessage(user, Master.findChatById(params.chatId)!!, params.messageId)
+                    Master.deleteMessage(user, params.messageId)
                     call.respond("OK")
                 }, call)
             }
