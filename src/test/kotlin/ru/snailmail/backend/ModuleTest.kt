@@ -4,17 +4,20 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import io.ktor.application.Application
+import io.ktor.auth.Credential
 import io.ktor.auth.UserPasswordCredential
-import io.ktor.http.*
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
-
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 
 class ModuleTest {
@@ -29,10 +32,19 @@ class ModuleTest {
             Data.init()
         }
     }
+
     @AfterEach
     fun clearDB() {
         Data.clear()
     }
+
+    private fun handleRequestPost(engine: TestApplicationEngine, uri: String, cred: Credential): TestApplicationCall {
+        return engine.handleRequest(HttpMethod.Post, uri) {
+            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            setBody(Gson().toJson(cred))
+        }
+    }
+
     @Test
     fun testWestLohi() = withTestApplication(Application::module) {
         with(handleRequest(HttpMethod.Get, "/")) {
@@ -50,27 +62,52 @@ class ModuleTest {
             )
         }
     }
+
     @Test
     fun testRegister() = withTestApplication(Application::module) {
         val cred = UserPasswordCredential("Anton", "password")
-        val callRegister = handleRequest(HttpMethod.Post, "/register") {
-            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            setBody(Gson().toJson(cred))
-        }
+        val callRegister = handleRequestPost(this, "/register", cred)
         assertEquals(HttpStatusCode.OK, callRegister.response.status())
 
         val callUsers = handleRequest(HttpMethod.Get, "/users")
         assert(callUsers.response.content.toString().contains("Anton"))
-        assertNotNull(Master.findUserByLogin("Anton"))
-        assertNull(Master.findUserByLogin("Ne Anton"))
+        assert(!callUsers.response.content.toString().contains("Grisha"))
+
+        assertEquals(
+            HttpStatusCode.Conflict,
+            handleRequestPost(this, "/register", cred).response.status()
+        )
     }
 
-    private fun userIdByResponse(response: TestApplicationResponse) : UID {
-        return jacksonObjectMapper().readValue<UID>(response.content.toString())
+    @Test
+    fun testLogin() = withTestApplication(Application::module) {
+        val cred = UserPasswordCredential("Anton", "password")
+        val callRegister = handleRequestPost(this, "/register", cred)
+        val credWrongLogin = UserPasswordCredential("Grisha", "password")
+        val credWrongPassword = UserPasswordCredential("Anton", "qwerty")
+        assertEquals(
+            HttpStatusCode.BadRequest,
+            handleRequestPost(this, "/login", credWrongLogin).response.status()
+        )
+        assertEquals(
+            HttpStatusCode.BadRequest,
+            handleRequestPost(this, "/login", credWrongPassword).response.status()
+        )
+        val callLogin = handleRequestPost(this, "/login", cred)
+        assertEquals(
+            userIdByResponse(callRegister.response).id,
+            JwtConfig.verifier.verify(callLogin.response.content).subject.toLong()
+        )
     }
-    private fun lichkaIdByResponse(response: TestApplicationResponse) : UID {
-        return jacksonObjectMapper().readValue<UID>(response.content.toString())
+
+    private fun userIdByResponse(response: TestApplicationResponse): UID {
+        return jacksonObjectMapper().readValue(response.content.toString())
     }
+
+    private fun lichkaIdByResponse(response: TestApplicationResponse): UID {
+        return jacksonObjectMapper().readValue(response.content.toString())
+    }
+
     @Disabled
     @Test
     fun testCreateLichka() = withTestApplication(Application::module) {
