@@ -2,6 +2,7 @@ package ru.snailmail.backend
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.Date
 
 object Data {
     object Users : Table() {
@@ -40,6 +41,7 @@ object Data {
         val text = varchar("text", length=100)
         val deleted = bool("deleted")
         val edited = bool("edited")
+        val time = varchar("time", length=100)
         // TODO: add attachments.
     }
 
@@ -90,6 +92,7 @@ object Data {
             it[from] = m.from.id
             it[deleted] = m.deleted
             it[edited] = m.edited
+            it[time] = m.time.toString()
         }
         MessagesToChats.insert {
             it[chatId] = chId.id
@@ -149,7 +152,7 @@ object Data {
 
     fun findMessageById(id: UID): Message? =
         Messages.select { Messages.id eq id.id }.singleOrNull()?.let {
-            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted], it[Messages.edited])
+            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted], it[Messages.edited], Date(it[Messages.time]))
         }
 
     fun getUserChats(uId: UID): List<Chat> =
