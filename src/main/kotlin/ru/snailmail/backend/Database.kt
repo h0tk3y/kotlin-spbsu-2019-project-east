@@ -1,5 +1,6 @@
 package ru.snailmail.backend
 
+import io.ktor.html.each
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.Date
@@ -12,32 +13,36 @@ object Data {
     }
 
     object Contacts : Table() {
-        val ownerId = long("ownerId")
-        val userId = long("userId")
+        val ownerId = long("ownerId").references(Users.userId)
+        val userId = long("userId").references(Users.userId)
         val preferredName = varchar("preferredName", length = 50)
         val isBlocked = bool("isBlocked")
     }
 
-    object Lichkas : Table() {
+    object Chats : Table() {
         val id = long("id").primaryKey()
-        val fstId = long("fstId")
-        val sndId = long("sndId")
+    }
+
+    object Lichkas : Table() {
+        val chatId = long("id").primaryKey().references(Chats.id)
+        val fstId = long("fstId").references(Users.userId)
+        val sndId = long("sndId").references(Users.userId)
     }
 
     object PublicChats : Table() {
-        val id = long("id").primaryKey()
+        val chatId = long("id").primaryKey().references(Chats.id)
         val name = varchar("name", length = 50)
-        val owner = long("owner")
+        val owner = long("owner").references(Users.userId)
     }
 
     object ChatsToUsers : Table() {
-        val userId = long("userId")
-        val chatId = long("chatId")
+        val userId = long("userId").references(Users.userId)
+        val chatId = long("chatId").references(Chats.id)
     }
 
     object Messages : Table() {
         val id = long("id").primaryKey()
-        val from = long("from")
+        val from = long("from").references(Users.userId)
         val text = varchar("text", length=100)
         val deleted = bool("deleted")
         val edited = bool("edited")
@@ -46,10 +51,9 @@ object Data {
     }
 
     object MessagesToChats : Table() {
-        val chatId = long("chatId")
-        val messageId = long("messageId")
+        val chatId = long("chatId").references(Chats.id)
+        val messageId = long("messageId").references(Messages.id)
     }
-    // TODO: add references.
     // TODO: make Database visible only from Master.
 
     fun findUserByLogin(userLogin: String): User? {
@@ -75,7 +79,7 @@ object Data {
     }
 
     fun userInChat(userId: UID, chatId: UID): Boolean =
-        ChatsToUsers.select { (ChatsToUsers.chatId eq chatId.id) and (ChatsToUsers.userId eq userId.id) }.empty()
+        !ChatsToUsers.select { (ChatsToUsers.chatId eq chatId.id) and (ChatsToUsers.userId eq userId.id) }.empty()
 
     fun findContact(fstId: UID, sndId: UID): Contact? {
         Contacts.select { (Contacts.ownerId eq fstId.id) and (Contacts.userId eq sndId.id) }.singleOrNull()?.let {
@@ -101,8 +105,13 @@ object Data {
     }
 
     fun addLichka(chId: UID, userId1: UID, userId2: UID) {
-        Lichkas.insert {
+        Chats.insert {
             it[id] = chId.id
+        }
+        Lichkas.insert {
+            it[chatId] = chId.id
+            it[fstId] = userId1.id
+            it[sndId] = userId2.id
         }
         ChatsToUsers.insert {
             it[chatId] = chId.id
@@ -115,8 +124,11 @@ object Data {
     }
 
     fun addPublicChat(chId: UID, chName: String, ownerId: UID) {
-        PublicChats.insert {
+        Chats.insert {
             it[id] = chId.id
+        }
+        PublicChats.insert {
+            it[chatId] = chId.id
             it[name] = chName
             it[owner] = ownerId.id
         }
@@ -177,16 +189,16 @@ object Data {
         Lichkas.select {
             ((Lichkas.fstId eq userId1.id) and (Lichkas.sndId eq userId2.id)) or
                     ((Lichkas.fstId eq userId2.id) and (Lichkas.sndId eq userId1.id))
-        }.singleOrNull()?.let { UID(it[Lichkas.id]) }
+        }.singleOrNull()?.let { UID(it[Lichkas.chatId]) }
 
     fun findChatById(id: UID): Chat? =
-        Lichkas.select { (Lichkas.id eq id.id) }.singleOrNull()?.let {
+        Lichkas.select { (Lichkas.chatId eq id.id) }.singleOrNull()?.let {
             val fst = findUserById(UID(it[Lichkas.fstId])) ?: return null
             val snd = findUserById(UID(it[Lichkas.sndId])) ?: return null
-            Lichka(fst, snd)
-        } ?: PublicChats.select { (PublicChats.id eq id.id) }.singleOrNull()?.let {
+            Lichka(id, fst, snd)
+        } ?: PublicChats.select { (PublicChats.chatId eq id.id) }.singleOrNull()?.let {
             val owner = findUserById(UID(it[PublicChats.owner])) ?: return null
-            PublicChat(it[PublicChats.name], owner)
+            PublicChat(id, it[PublicChats.name], owner)
         }
 
     fun deleteMessage(msgId: UID): Boolean =
@@ -216,6 +228,7 @@ object Data {
     fun init() {
         SchemaUtils.create(Users)
         SchemaUtils.create(Contacts)
+        SchemaUtils.create(Chats)
         SchemaUtils.create(Lichkas)
         SchemaUtils.create(PublicChats)
         SchemaUtils.create(ChatsToUsers)
@@ -225,13 +238,14 @@ object Data {
 
     fun clear() {
         transaction {
-            Users.deleteAll()
             Contacts.deleteAll()
             Lichkas.deleteAll()
             PublicChats.deleteAll()
             ChatsToUsers.deleteAll()
-            Messages.deleteAll()
             MessagesToChats.deleteAll()
+            Messages.deleteAll()
+            Users.deleteAll()
+            Chats.deleteAll()
         }
     }
 }
