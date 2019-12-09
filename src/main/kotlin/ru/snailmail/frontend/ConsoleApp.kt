@@ -1,7 +1,10 @@
 package ru.snailmail.frontend
 
 import io.ktor.auth.UserPasswordCredential
+import ru.snailmail.backend.AlreadyExistsException
+import ru.snailmail.backend.AlreadyInTheChatException
 import ru.snailmail.backend.UID
+import java.lang.IllegalArgumentException
 
 fun main() {
     val ca = ConsoleApp()
@@ -50,7 +53,13 @@ class ConsoleApp {
         var name = readLine()
         println("Enter your password: ")
         var pass = readLine()
-        println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
+        try {
+            println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
+        } catch (e: IllegalArgumentException) {
+            println("Wrong login")
+        } catch (e: IllegalArgumentException) {
+            println("Wrong password")
+        }
     }
 
     private fun register() {
@@ -58,7 +67,13 @@ class ConsoleApp {
         var name = readLine()
         println("Enter your password: ")
         var pass = readLine()
-        println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
+        try {
+            println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
+        } catch (e: IllegalArgumentException) {
+            println("Wrong login")
+        } catch (e: AlreadyExistsException) {
+            println("User with login $name already exists")
+        }
     }
 
     private fun help() {
@@ -66,20 +81,27 @@ class ConsoleApp {
             "Possible commands:\n" +
                     "\tlogin          Залогиниться\n" +
                     "\tregister       Зарегистрироваться\n" +
-                    "\tcreateLichka   Создать диалог"
+                    "\tcreate lichka   Создать диалог"
         )
     }
 
     private fun getUsers() {
         for (user in client.getUsers()) {
-            println(user.name)
+            println(user.name + " " + "ID = ${user.userID.id}")
         }
     }
 
     private fun createLichka() {
         println("Enter your friend's id:")
         var name = readLine()
-        client.createLichka(UID(name?.toLong() ?: 0))
+        try {
+            client.createLichka(UID(name?.toLong() ?: 0))
+            println("Lichka with $name created")
+        } catch (e: AlreadyInTheChatException) {
+            println("User $name is already in the chat")
+        } catch (e: AlreadyExistsException) {
+            println("You already have a chat")
+        }
     }
 
     private fun sendMessage() {

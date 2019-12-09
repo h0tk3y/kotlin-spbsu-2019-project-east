@@ -44,7 +44,7 @@ object Master {
 
     fun logIn(creds: UserPasswordCredential): UID =
         transaction {
-            val id = Data.findUserByLogin(creds.name)?.userID ?: throw java.lang.IllegalArgumentException("Wrong login")
+            val id = Data.findUserByLogin(creds.name)?.userID ?: throw IllegalArgumentException("Wrong login")
             if (Data.findUserById(id)!!.passwordHash != hash(creds.password, id)) {
                 throw IllegalArgumentException("Wrong password")
             }

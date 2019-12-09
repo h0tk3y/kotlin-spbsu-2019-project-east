@@ -125,7 +125,7 @@ fun Application.module() {
             post("/sendMessage") {
                 requestData<SendMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    val chat = Master.findChatById(params.chatId) ?: throw java.lang.IllegalArgumentException()
+                    val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
                     Master.sendMessage(user, chat, params.text)
                     call.respondText("OK")
                 }, call)

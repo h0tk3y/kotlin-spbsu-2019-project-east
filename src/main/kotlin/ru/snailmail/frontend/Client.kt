@@ -43,20 +43,22 @@ class Client {
         return response
     }
 
-    fun getChats() : String?{
-        val outputBytes = Gson().toJson("").toByteArray(charset("UTF-8"))
+    fun getChats() : String? {
+        val outputBytes = objectMapper.writeValueAsBytes("")
         val rawResponse = sendPostRequest("chats", outputBytes)
+//        rawResponse ?: return emptyList()
+//        val response : List<Chat> = objectMapper.readValue(rawResponse)
         return rawResponse
     }
 
     fun register(creds: UserPasswordCredential) : String?{
-        val outputBytes = Gson().toJson(creds).toByteArray(charset("UTF-8"))
+        val outputBytes = objectMapper.writeValueAsBytes(creds)
         return sendPostRequest("register", outputBytes) //returns Json {UserId}
     }
 
     fun logIn(creds: UserPasswordCredential) : String? {
-        val outputBytes = Gson().toJson(creds).toByteArray(charset("UTF-8"))
-        var res = "OK"
+        val outputBytes = objectMapper.writeValueAsBytes(creds)
+        var res = "Logged in as ${creds.name}"
 
         try {
             token = sendPostRequest("login", outputBytes)
@@ -67,14 +69,13 @@ class Client {
     }
 
     fun sendMessage(chatId: UID, text: String): String? {
-        val outputBytes = Gson().toJson(SendMessageRequest(chatId, text)).toByteArray(charset("UTF-8"))
+        val outputBytes = objectMapper.writeValueAsBytes(SendMessageRequest(chatId, text))
         return sendPostRequest("sendMessage", outputBytes)
     }
 
     //change interface (enter friend's name)
     fun createLichka(friendId: UID) {
-
-        val outputBytes = Gson().toJson(CreateLichkaRequest(friendId)).toByteArray(charset("UTF-8"))
+        val outputBytes = objectMapper.writeValueAsBytes(CreateLichkaRequest(friendId))
         sendPostRequest("createLichka", outputBytes)
     }
 
@@ -126,7 +127,7 @@ class Client {
 
             outputStream.write(outputBytes)
 
-            if (responseCode != HTTP_OK) throw java.lang.IllegalArgumentException("Something went wrong")
+            if (responseCode != HTTP_OK) throw IllegalArgumentException("Something went wrong")
 
             response = readResponse(inputStream)
 
