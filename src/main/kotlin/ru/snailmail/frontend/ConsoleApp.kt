@@ -4,7 +4,7 @@ import io.ktor.auth.UserPasswordCredential
 import ru.snailmail.backend.AlreadyExistsException
 import ru.snailmail.backend.AlreadyInTheChatException
 import ru.snailmail.backend.UID
-import java.lang.IllegalArgumentException
+import kotlin.IllegalArgumentException
 
 fun main() {
     val ca = ConsoleApp()
@@ -19,7 +19,7 @@ class ConsoleApp {
         println(client.greetings())
 
         while (flag) {
-            var answer = readLine()
+            val answer = readLine()
             when (answer) {
                 "-h" -> help()
                 "login" -> {
@@ -50,9 +50,9 @@ class ConsoleApp {
 
     private fun login() {
         println("Enter your name: ")
-        var name = readLine()
+        val name = readLine()
         println("Enter your password: ")
-        var pass = readLine()
+        val pass = readLine()
         try {
             println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
@@ -62,11 +62,12 @@ class ConsoleApp {
 
     private fun register() {
         println("Enter your name: ")
-        var name = readLine()
+        val name = readLine()
         println("Enter your password: ")
-        var pass = readLine()
+        val pass = readLine()
         try {
             println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
+            println("User $name signed up!")
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -83,13 +84,13 @@ class ConsoleApp {
 
     private fun getUsers() {
         for (user in client.getUsers()) {
-            println(user.name + " " + "ID = ${user.userID.id}")
+            println(user.name + ", " + "ID=${user.userID.id}")
         }
     }
 
     private fun createLichka() {
         println("Enter your friend's id:")
-        var name = readLine()
+        val name = readLine()
         try {
             client.createLichka(UID(name?.toLong() ?: 0))
             println("Lichka with $name created")
@@ -100,10 +101,14 @@ class ConsoleApp {
 
     private fun sendMessage() {
         println("Enter chat id:")
-        var chatId = readLine()
+        val chatId = readLine()
         println("Enter message:")
-        var text = readLine()
-        print(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+        val text = readLine()
+        try {
+            print(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
     }
 
     private fun getChats() {
