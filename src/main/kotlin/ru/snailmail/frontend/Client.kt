@@ -62,8 +62,8 @@ class Client {
 
         try {
             token = sendPostRequest("login", outputBytes)
-        } catch (e : Exception) {
-            res = "Error"
+        } catch (e : IllegalArgumentException) {
+            throw e
         }
         return res
     }
@@ -127,7 +127,7 @@ class Client {
 
             outputStream.write(outputBytes)
 
-            if (responseCode != HTTP_OK) throw IllegalArgumentException("Something went wrong")
+            if (responseCode != HTTP_OK) throw IllegalArgumentException(readResponse(errorStream))
 
             response = readResponse(inputStream)
 

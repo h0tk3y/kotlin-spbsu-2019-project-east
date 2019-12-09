@@ -56,9 +56,7 @@ class ConsoleApp {
         try {
             println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
-            println("Wrong login")
-        } catch (e: IllegalArgumentException) {
-            println("Wrong password")
+            println(e.message)
         }
     }
 
@@ -70,9 +68,7 @@ class ConsoleApp {
         try {
             println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
-            println("Wrong login")
-        } catch (e: AlreadyExistsException) {
-            println("User with login $name already exists")
+            println(e.message)
         }
     }
 
@@ -81,7 +77,7 @@ class ConsoleApp {
             "Possible commands:\n" +
                     "\tlogin          Залогиниться\n" +
                     "\tregister       Зарегистрироваться\n" +
-                    "\tcreate lichka   Создать диалог"
+                    "\tcreate lichka   Создать диалог\n"
         )
     }
 
@@ -97,10 +93,8 @@ class ConsoleApp {
         try {
             client.createLichka(UID(name?.toLong() ?: 0))
             println("Lichka with $name created")
-        } catch (e: AlreadyInTheChatException) {
-            println("User $name is already in the chat")
-        } catch (e: AlreadyExistsException) {
-            println("You already have a chat")
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
         }
     }
 
