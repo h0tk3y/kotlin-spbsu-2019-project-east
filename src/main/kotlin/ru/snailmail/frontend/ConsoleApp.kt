@@ -71,7 +71,9 @@ class ConsoleApp {
     }
 
     private fun getUsers() {
-        println(client.getUsers())
+        for (user in client.getUsers()) {
+            println(user.name)
+        }
     }
 
     private fun createLichka() {

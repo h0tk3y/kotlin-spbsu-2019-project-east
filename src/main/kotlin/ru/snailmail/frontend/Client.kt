@@ -1,4 +1,6 @@
 package ru.snailmail.frontend
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
@@ -20,7 +22,7 @@ import java.net.HttpURLConnection.HTTP_OK
 import java.net.URL
 import java.net.URLEncoder
 
-private val objectMapper = jacksonObjectMapper()
+private val objectMapper = jacksonObjectMapper().registerModule(KotlinModule(nullToEmptyCollection = true))
 
 class Client {
 
@@ -34,14 +36,11 @@ class Client {
     }
 
     //remove later
-    fun getUsers() : String?{
+    fun getUsers() : List<User>{
         val rawResponse = sendGetRequest("users")
-        rawResponse ?: return "Error"
-//        val response = objectMapper.readValue<MutableList<User>>(raw_response)
-//        for (i in response) {
-//            println(i.name)
-//        }
-        return rawResponse
+        rawResponse ?: return emptyList()
+        val response : List<User> = objectMapper.readValue(rawResponse)
+        return response
     }
 
     fun getChats() : String?{
