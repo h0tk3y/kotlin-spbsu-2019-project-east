@@ -4,7 +4,7 @@ import io.ktor.auth.UserPasswordCredential
 import ru.snailmail.backend.AlreadyExistsException
 import ru.snailmail.backend.AlreadyInTheChatException
 import ru.snailmail.backend.UID
-import java.lang.IllegalArgumentException
+import kotlin.IllegalArgumentException
 
 fun main() {
     val ca = ConsoleApp()
@@ -19,7 +19,7 @@ class ConsoleApp {
         println(client.greetings())
 
         while (flag) {
-            var answer = readLine()
+            val answer = readLine()
             when (answer) {
                 "-h" -> help()
                 "login" -> {
@@ -33,6 +33,12 @@ class ConsoleApp {
                 }
                 "create lichka" -> {
                     createLichka()
+                }
+                "create chat" -> {
+                    createPublicChat()
+                }
+                "invite member" -> {
+                    inviteMember()
                 }
                 "send message" -> {
                     sendMessage()
@@ -75,9 +81,9 @@ class ConsoleApp {
             return
         }
         println("Enter your name: ")
-        var name = readLine()
+        val name = readLine()
         println("Enter your password: ")
-        var pass = readLine()
+        val pass = readLine()
         try {
             println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
@@ -87,11 +93,12 @@ class ConsoleApp {
 
     private fun register() {
         println("Enter your name: ")
-        var name = readLine()
+        val name = readLine()
         println("Enter your password: ")
-        var pass = readLine()
+        val pass = readLine()
         try {
             println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
+            println("User $name signed up!")
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -107,19 +114,24 @@ class ConsoleApp {
                     "\tget chats    Список чатов\n" +
                     "\tget chat messages    Сообщения чата\n" +
                     "\tlogout\n" +
-                    "\texit\n"
+                    "\texit\n" +
+                    "\tcreate chat    Создать беседу\n" +
+                    "\tinvite member Пригласить в беседу\n"
+
         )
     }
 
     private fun getUsers() {
-        for (user in client.getUsers()) {
-            println(user.name + " " + "ID = ${user.userID.id}")
+        val users = client.getUsers()
+        if (users.isEmpty()) println("No users")
+        for (user in users) {
+            println(user.name + ", " + "ID=${user.userID.id}")
         }
     }
 
     private fun createLichka() {
         println("Enter your friend's id:")
-        var name = readLine()
+        val name = readLine()
         try {
             client.createLichka(UID(name?.toLong() ?: 0))
             println("Lichka with $name created")
@@ -130,10 +142,37 @@ class ConsoleApp {
 
     private fun sendMessage() {
         println("Enter chat id:")
-        var chatId = readLine()
+        val chatId = readLine()
         println("Enter message:")
-        var text = readLine()
-        print(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+        val text = readLine()
+        try {
+            println(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
+    }
+
+    private fun createPublicChat() {
+        println("Enter chat name:")
+        val chatName = readLine()
+        try {
+            client.createPublicChat(chatName ?: "")
+            println("Chat $chatName created!")
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
+    }
+
+    private fun inviteMember() {
+        println("Enter chat ID:")
+        val chatID = readLine()
+        println("Enter user ID:")
+        val userID = readLine()
+        try {
+            println(client.inviteUser(UID(chatID?.toLong() ?: 0), UID(userID?.toLong() ?: 0)))
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
     }
 
     private fun getChats() {
