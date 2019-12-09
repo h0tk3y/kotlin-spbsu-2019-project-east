@@ -1,6 +1,5 @@
 package ru.snailmail.backend
 
-import io.ktor.html.each
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.Date
@@ -13,8 +12,8 @@ object Data {
     }
 
     object Contacts : Table() {
-        val ownerId = long("ownerId").references(Users.userId)
-        val userId = long("userId").references(Users.userId)
+        val ownerId = reference("ownerId", Users.userId)
+        val userId = reference("userId", Users.userId)
         val preferredName = varchar("preferredName", length = 50)
         val isBlocked = bool("isBlocked")
     }
@@ -24,25 +23,25 @@ object Data {
     }
 
     object Lichkas : Table() {
-        val chatId = long("id").primaryKey().references(Chats.id)
-        val fstId = long("fstId").references(Users.userId)
-        val sndId = long("sndId").references(Users.userId)
+        val chatId = reference("id", Chats.id).primaryKey()
+        val fstId = reference("fstId", Users.userId)
+        val sndId = reference("sndId", Users.userId)
     }
 
     object PublicChats : Table() {
-        val chatId = long("id").primaryKey().references(Chats.id)
+        val chatId = reference("id", Chats.id).primaryKey()
         val name = varchar("name", length = 50)
-        val owner = long("owner").references(Users.userId)
+        val owner = reference("owner", Users.userId)
     }
 
     object ChatsToUsers : Table() {
-        val userId = long("userId").references(Users.userId)
-        val chatId = long("chatId").references(Chats.id)
+        val userId = reference("userId", Users.userId)
+        val chatId = reference("chatId", Chats.id)
     }
 
     object Messages : Table() {
         val id = long("id").primaryKey()
-        val from = long("from").references(Users.userId)
+        val from = reference("from", Users.userId)
         val text = varchar("text", length=100)
         val deleted = bool("deleted")
         val edited = bool("edited")
@@ -51,8 +50,8 @@ object Data {
     }
 
     object MessagesToChats : Table() {
-        val chatId = long("chatId").references(Chats.id)
-        val messageId = long("messageId").references(Messages.id)
+        val chatId = reference("chatId", Chats.id)
+        val messageId = reference("messageId", Messages.id)
     }
     // TODO: make Database visible only from Master.
 
@@ -79,15 +78,13 @@ object Data {
     }
 
     fun userInChat(userId: UID, chatId: UID): Boolean =
-        !ChatsToUsers.select { (ChatsToUsers.chatId eq chatId.id) and (ChatsToUsers.userId eq userId.id) }.empty()
+        ChatsToUsers.select { (ChatsToUsers.chatId eq chatId.id) and (ChatsToUsers.userId eq userId.id) }.any()
 
-    fun findContact(fstId: UID, sndId: UID): Contact? {
+    fun findContact(fstId: UID, sndId: UID): Contact? =
         Contacts.select { (Contacts.ownerId eq fstId.id) and (Contacts.userId eq sndId.id) }.singleOrNull()?.let {
-            return Contact(UID(it[Contacts.ownerId]), UID(it[Contacts.userId]),
+            Contact(UID(it[Contacts.ownerId]), UID(it[Contacts.userId]),
                 it[Contacts.preferredName], it[Contacts.isBlocked])
         }
-        return null
-    }
 
     fun addMessage(chId: UID, m: Message) {
         Messages.insert {
@@ -164,25 +161,41 @@ object Data {
 
     fun findMessageById(id: UID): Message? =
         Messages.select { Messages.id eq id.id }.singleOrNull()?.let {
-            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted], it[Messages.edited], Date(it[Messages.time]))
+            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
+                it[Messages.edited], Date(it[Messages.time]))
         }
 
     fun getUserChats(uId: UID): List<Chat> =
-        ChatsToUsers.select { ChatsToUsers.userId eq uId.id }.map {
-            findChatById(UID(it[ChatsToUsers.chatId]))
-                ?: throw DatabaseInternalException("Illegal chatId in ChatsToUsers")
-        }
+        PublicChats.join(ChatsToUsers, JoinType.INNER, null, null) {
+            PublicChats.chatId eq ChatsToUsers.chatId
+        }.select {
+            ChatsToUsers.userId eq uId.id
+        }.map { // TODO: fix this shit
+                PublicChat(UID(it[PublicChats.chatId]), it[PublicChats.name], findUserById(UID(it[PublicChats.owner]))!!)
+            }.plus(Lichkas.join(ChatsToUsers, JoinType.INNER, null, null) {
+                Lichkas.chatId eq ChatsToUsers.chatId
+            }.select {
+                ChatsToUsers.userId eq uId.id
+            }.map { // TODO: fix this shit
+                Lichka(UID(it[Lichkas.chatId]), findUserById(UID(it[Lichkas.fstId]))!!, findUserById(UID(it[Lichkas.sndId]))!!)
+            }
+            ) // TODO: sort by time
 
     fun findChatMembers(chId: UID): List<User> =
-        ChatsToUsers.select { ChatsToUsers.chatId eq chId.id }.map {
-            findUserById(UID(it[ChatsToUsers.userId]))
-                ?: throw DatabaseInternalException("Illegal userId in ChatsToUsers")
-        }
+        Users.join(ChatsToUsers, JoinType.INNER, null, null) {
+            Users.userId eq ChatsToUsers.userId
+        }.select {
+            ChatsToUsers.chatId eq chId.id
+        }.map { User(it[Users.name], it[Users.passwordHash], UID(it[Users.userId])) }
 
     fun findChatMessages(chId: UID): List<Message> =
-        MessagesToChats.select { MessagesToChats.chatId eq chId.id }.map {
-            findMessageById(UID(it[MessagesToChats.messageId]))
-                ?: throw DatabaseInternalException("Illegal messageId in MessagesToChats")
+        Messages.join(MessagesToChats, JoinType.INNER, null, null) {
+            Messages.id eq MessagesToChats.messageId
+        }.select {
+            MessagesToChats.chatId eq chId.id
+        }.map {
+            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
+                it[Messages.edited], Date(it[Messages.time]))
         }
 
     fun findLichkaByMembers(userId1: UID, userId2: UID): UID? =
