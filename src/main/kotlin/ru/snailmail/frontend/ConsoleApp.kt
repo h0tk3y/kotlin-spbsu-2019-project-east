@@ -40,15 +40,40 @@ class ConsoleApp {
                 "get chats" -> {
                     getChats()
                 }
+                "get chat messages" -> {
+                    println("Enter chat Id")
+                    getChatMessages()
+                }
                 "exit" -> {
                     flag = false
+                }
+                "logout" -> {
+                    logout()
                 }
                 else -> dumb()
             }
         }
     }
 
+    private fun getChatMessages() {
+        val n :Int?  = readLine()?.toInt()
+        if (n == null) {
+            println("Incorrect input")
+            return
+        }
+        client.getChatMessages(UID(n.toLong()))
+    }
+
+    private fun logout() {
+        client.logout()
+        println("You are logged out")
+    }
+
     private fun login() {
+        if (client.token != null) {
+            println("You are already logged in!")
+            return
+        }
         println("Enter your name: ")
         var name = readLine()
         println("Enter your password: ")
@@ -77,7 +102,12 @@ class ConsoleApp {
             "Possible commands:\n" +
                     "\tlogin          Залогиниться\n" +
                     "\tregister       Зарегистрироваться\n" +
-                    "\tcreate lichka   Создать диалог\n"
+                    "\tcreate lichka   Создать диалог\n" +
+                    "\tsend message     Послать сообщение\n" +
+                    "\tget chats    Список чатов\n" +
+                    "\tget chat messages    Сообщения чата\n" +
+                    "\tlogout\n" +
+                    "\texit\n"
         )
     }
 

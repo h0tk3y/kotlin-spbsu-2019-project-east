@@ -31,6 +31,10 @@ class Client {
     lateinit var user: User
         private set
 
+    fun logout() {
+        token = null
+    }
+
     fun greetings() : String?{
         return sendGetRequest("")
     }
@@ -46,8 +50,17 @@ class Client {
     fun getChats() : String? {
         val outputBytes = objectMapper.writeValueAsBytes("")
         val rawResponse = sendPostRequest("chats", outputBytes)
+
 //        rawResponse ?: return emptyList()
 //        val response : List<Chat> = objectMapper.readValue(rawResponse)
+        return rawResponse
+    }
+
+    fun getChatMessages(chatId: UID) : String? {
+        val outputBytes = objectMapper.writeValueAsBytes(ShowMessageRequest(chatId))
+        println(ShowMessageRequest(chatId))
+        val rawResponse = sendPostRequest("showMessages", outputBytes)
+        println(rawResponse)
         return rawResponse
     }
 
