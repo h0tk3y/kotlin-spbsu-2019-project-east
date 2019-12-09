@@ -34,6 +34,12 @@ class ConsoleApp {
                 "create lichka" -> {
                     createLichka()
                 }
+                "create chat" -> {
+                    createPublicChat()
+                }
+                "invite member" -> {
+                    inviteMember()
+                }
                 "send message" -> {
                     sendMessage()
                 }
@@ -78,12 +84,16 @@ class ConsoleApp {
             "Possible commands:\n" +
                     "\tlogin          Залогиниться\n" +
                     "\tregister       Зарегистрироваться\n" +
-                    "\tcreate lichka   Создать диалог\n"
+                    "\tcreate lichka   Создать диалог\n" +
+                    "\tcreate chat    Создать беседу\n" +
+                    "\tinvite member Пригласить в беседу\n"
         )
     }
 
     private fun getUsers() {
-        for (user in client.getUsers()) {
+        val users = client.getUsers()
+        if (users.isEmpty()) println("No users")
+        for (user in users) {
             println(user.name + ", " + "ID=${user.userID.id}")
         }
     }
@@ -105,7 +115,30 @@ class ConsoleApp {
         println("Enter message:")
         val text = readLine()
         try {
-            print(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+            println(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
+    }
+
+    private fun createPublicChat() {
+        println("Enter chat name:")
+        val chatName = readLine()
+        try {
+            client.createPublicChat(chatName ?: "")
+            println("Chat $chatName created!")
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
+    }
+
+    private fun inviteMember() {
+        println("Enter chat ID:")
+        val chatID = readLine()
+        println("Enter user ID:")
+        val userID = readLine()
+        try {
+            println(client.inviteUser(UID(chatID?.toLong() ?: 0), UID(userID?.toLong() ?: 0)))
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }

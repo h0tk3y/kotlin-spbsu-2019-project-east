@@ -79,14 +79,13 @@ class Client {
     }
 
     fun createPublicChat(name: String) {
-        if (!::user.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        Master.createPublicChat(user, name)
+        val outputBytes = objectMapper.writeValueAsBytes(CreatePublicChatRequest(name))
+        sendPostRequest("createPublicChat", outputBytes)
     }
 
-    fun inviteUser(c: PublicChat, user: User) {
-        Master.inviteUser(this.user, c, user)
+    fun inviteUser(chatID: UID, userID: UID) {
+        val outputBytes = objectMapper.writeValueAsBytes(InviteMemberRequest(chatID, userID))
+        sendPostRequest("inviteMember", outputBytes)
     }
 
     fun addToContacts() {
