@@ -48,6 +48,13 @@ suspend inline fun <reified T : Any> requestData(f : (T, UserIdPrincipal) -> Uni
     }
 }
 
+fun UnionChatsfromChats(chatList: List<Chat>): MutableList<UnionChat> {
+    val listUnionChat = mutableListOf<UnionChat>()
+    for (chat in chatList) {
+        listUnionChat.add(UnionChat(chat))
+    }
+    return listUnionChat
+}
 fun Application.module() {
     install(ContentNegotiation) {
         jackson {
@@ -134,7 +141,9 @@ fun Application.module() {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    call.respond(Master.getUserChats(user.userID))
+                    val chats = Master.getUserChats(user.userID)
+                    call.respond(UnionChatsfromChats(chats))
+//                    call.respond(Master.getUserChats(user.userID))
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }

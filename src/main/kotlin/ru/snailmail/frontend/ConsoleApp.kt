@@ -52,7 +52,7 @@ class ConsoleApp {
         println("Enter your name: ")
         var name = readLine()
         println("Enter your password: ")
-        var pass = readLine()
+        var pass = readLine ()
         try {
             println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
