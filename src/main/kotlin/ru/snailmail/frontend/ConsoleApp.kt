@@ -1,14 +1,21 @@
 package ru.snailmail.frontend
 
 import io.ktor.auth.UserPasswordCredential
-import ru.snailmail.backend.AlreadyExistsException
-import ru.snailmail.backend.AlreadyInTheChatException
+import ru.snailmail.backend.Message
 import ru.snailmail.backend.UID
-import kotlin.IllegalArgumentException
+
+const val ANSI_RESET = "\u001B[0m"
+const val ANSI_BLACK = "\u001B[30m"
+const val ANSI_RED = "\u001B[31m"
+const val ANSI_GREEN = "\u001B[32m"
+const val ANSI_YELLOW = "\u001B[33m"
+const val ANSI_BLUE = "\u001B[34m"
+const val ANSI_PURPLE = "\u001B[35m"
+const val ANSI_CYAN = "\u001B[36m"
+const val ANSI_WHITE = "\u001B[37m"
 
 fun main() {
-    val ca = ConsoleApp()
-    ca.runner()
+    ConsoleApp().runner()
 }
 
 class ConsoleApp {
@@ -47,7 +54,6 @@ class ConsoleApp {
                     getChats()
                 }
                 "get chat messages" -> {
-                    println("Enter chat Id")
                     getChatMessages()
                 }
                 "exit" -> {
@@ -61,13 +67,53 @@ class ConsoleApp {
         }
     }
 
+    private fun help() {
+        print(
+            "Possible commands:\n" +
+                    "\tlogin          Залогиниться\n" +
+                    "\tregister       Зарегистрироваться\n" +
+                    "\tcreate lichka   Создать диалог\n" +
+                    "\tsend message     Послать сообщение\n" +
+                    "\tget chats    Список чатов\n" +
+                    "\tget chat messages    Сообщения чата\n" +
+                    "\tlogout\n" +
+                    "\texit\n" +
+                    "\tcreate chat    Создать беседу\n" +
+                    "\tinvite member Пригласить в беседу\n"
+
+        )
+    }
+
+    private fun messagePrettyPrint(msg : Message) {
+        val from = client.getUsers().find { it.userID == msg.from }
+        if (from!!.userID == client.user.userID) {
+            println("\t\t" + msg.time)
+            println("\t\t" + ANSI_BLUE + "You" + ANSI_RESET)
+            println("\t\t" + ANSI_GREEN + msg.text + ANSI_RESET)
+        } else {
+            println( msg.time)
+            println(ANSI_BLUE + from.name + ANSI_RESET)
+            println(ANSI_GREEN + msg.text + ANSI_RESET)
+        }
+        println()
+    }
+
     private fun getChatMessages() {
+        println("Enter chat Id")
         val n : Long?  = readLine()?.toLong()
         if (n == null) {
             println("Incorrect input")
             return
         }
-        println(client.getChatMessages(UID(n)))
+        val msgs = client.getChatMessages(UID(n))
+        if (msgs == null ) {
+            println("Something went wrong...")
+            return
+        }
+        if (msgs.isEmpty()) {
+            println("No messages yet")
+        }
+        msgs.forEach { messagePrettyPrint(it) }
     }
 
     private fun logout() {
@@ -102,23 +148,6 @@ class ConsoleApp {
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
-    }
-
-    private fun help() {
-        print(
-            "Possible commands:\n" +
-                    "\tlogin          Залогиниться\n" +
-                    "\tregister       Зарегистрироваться\n" +
-                    "\tcreate lichka   Создать диалог\n" +
-                    "\tsend message     Послать сообщение\n" +
-                    "\tget chats    Список чатов\n" +
-                    "\tget chat messages    Сообщения чата\n" +
-                    "\tlogout\n" +
-                    "\texit\n" +
-                    "\tcreate chat    Создать беседу\n" +
-                    "\tinvite member Пригласить в беседу\n"
-
-        )
     }
 
     private fun getUsers() {

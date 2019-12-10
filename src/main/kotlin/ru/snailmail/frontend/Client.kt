@@ -59,8 +59,12 @@ class Client {
 
     fun getChatMessages(chatId: UID) : List<Message>? {
         val outputBytes = objectMapper.writeValueAsBytes(ShowMessageRequest(chatId))
-
-        val rawResponse = sendPostRequest("showMessages", outputBytes)
+        var rawResponse :String? = null
+        try {
+            rawResponse = sendPostRequest("showMessages", outputBytes)
+        } catch (e : java.lang.IllegalArgumentException) {
+            println(e.message)
+        }
         rawResponse ?: return null
 
         val response: List<Message> = objectMapper.readValue(rawResponse)
@@ -75,7 +79,9 @@ class Client {
     fun logIn(creds: UserPasswordCredential) : String? {
         val outputBytes = objectMapper.writeValueAsBytes(creds)
         try {
-            token = sendPostRequest("login", outputBytes)
+            val responce = sendPostRequest("login", outputBytes)
+            token = responce?.split('$')!![0]
+            user = objectMapper.readValue(responce.split('$')[1])
         } catch (e : IllegalArgumentException) {
             throw e
         }

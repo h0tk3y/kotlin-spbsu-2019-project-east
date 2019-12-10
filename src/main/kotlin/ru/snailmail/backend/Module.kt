@@ -1,5 +1,6 @@
 package ru.snailmail.backend
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.application.*
 import io.ktor.http.*
@@ -91,8 +92,9 @@ fun Application.module() {
             try {
                 val creds = call.receive<UserPasswordCredential>()
                 val uid = Master.logIn(creds)
+                val user = Master.findUserById(uid)
                 val token = JwtConfig.makeToken(uid, creds)
-                call.respond(token)
+                call.respond("$token$${ objectMapper.writeValueAsString(user)}")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
             }
