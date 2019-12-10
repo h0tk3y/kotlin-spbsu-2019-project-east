@@ -1,10 +1,6 @@
 package ru.snailmail.backend
 
 import com.fasterxml.jackson.annotation.JsonBackReference
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import java.lang.IllegalArgumentException
 
 
 abstract class Chat(val chatID: UID) {

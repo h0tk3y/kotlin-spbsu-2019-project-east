@@ -18,9 +18,7 @@ import kotlinx.html.head
 import kotlinx.html.title
 import kotlin.IllegalArgumentException
 
-private val objectMapper = jacksonObjectMapper()
-
-data class CreateLichkaRequest(val invitedId: UID)
+data class CreateLichkaRequest(val invitedLogin: String)
 
 data class SendMessageRequest(val chatId: UID, val text: String)
 
@@ -100,7 +98,7 @@ fun Application.module() {
         authenticate {
             post("/createLichka") {
                 requestData<CreateLichkaRequest>({ params, principal ->
-                    val sndUser = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
+                    val sndUser = Master.findUserByLogin(params.invitedLogin) ?: throw IllegalArgumentException()
                     val fstUser = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
                     val id = Master.createLichka(fstUser, sndUser)
                     call.respondText("$id")
@@ -185,14 +183,14 @@ fun Application.module() {
                     call.respondText("OK")
                 }, call)
             }
-            post("addContact") {
+            post("/addContact") {
                 requestData<AddOrDeleteContactRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.addContact(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)
             }
-            post("deleteContact") {
+            post("/deleteContact") {
                 requestData<AddOrDeleteContactRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteContact(user.userID, params.userId)
