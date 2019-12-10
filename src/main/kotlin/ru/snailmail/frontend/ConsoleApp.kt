@@ -63,7 +63,9 @@ class ConsoleApp {
         println("Enter your name: ")
         val name = readLine()
         println("Enter your password: ")
+
         val pass = readLine()
+
         try {
             println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
