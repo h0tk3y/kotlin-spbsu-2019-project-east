@@ -1,7 +1,8 @@
 package ru.snailmail.frontend
 
 import io.ktor.auth.UserPasswordCredential
-import ru.snailmail.backend.Contact
+import ru.snailmail.backend.AlreadyExistsException
+import ru.snailmail.backend.AlreadyInTheChatException
 import ru.snailmail.backend.UID
 import kotlin.IllegalArgumentException
 
@@ -49,13 +50,6 @@ class ConsoleApp {
                     println("Enter chat Id")
                     getChatMessages()
                 }
-                "get contacts" -> {
-                    getContacts()
-                }
-                "add contact" -> {
-                    addContact()
-
-                }
                 "exit" -> {
                     flag = false
                 }
@@ -89,9 +83,7 @@ class ConsoleApp {
         println("Enter your name: ")
         val name = readLine()
         println("Enter your password: ")
-
         val pass = readLine()
-
         try {
             println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
@@ -124,10 +116,8 @@ class ConsoleApp {
                     "\tlogout\n" +
                     "\texit\n" +
                     "\tcreate chat    Создать беседу\n" +
-                    "\tinvite member Пригласить в беседу\n" +
-                    "\tinvite member Пригласить в беседу\n" +
-                    "\tget contacts   Посмотреть контакты\n" +
-                    "\tadd contact    Добавить контакт\n"
+                    "\tinvite member Пригласить в беседу\n"
+
         )
     }
 
@@ -140,10 +130,10 @@ class ConsoleApp {
     }
 
     private fun createLichka() {
-        println("Enter your friend's login:")
+        println("Enter your friend's id:")
         val name = readLine()
         try {
-            client.createLichka(name ?: "")
+            client.createLichka(UID(name?.toLong() ?: 0))
             println("Lichka with $name created")
         } catch (e: IllegalArgumentException) {
             println(e.message)
@@ -187,32 +177,6 @@ class ConsoleApp {
 
     private fun getChats() {
         println(client.getChats())
-    }
-
-    private fun getContacts() {
-        val contacts: List<Contact>
-        try {
-            contacts = client.getContacts()
-            if (contacts.isEmpty()) {
-                println("You haven't got friends")
-                return
-            }
-            for (contact in contacts) {
-                println(contact.preferredName)
-            }
-        } catch (e: IllegalArgumentException) {
-            println(e.message)
-        }
-    }
-
-    private fun addContact() {
-        println("Enter contact's id:")
-        val userID = readLine()
-        try {
-            println(client.addContact(UID(userID?.toLong() ?: 0)))
-        } catch (e: IllegalArgumentException) {
-            println(e.message)
-        }
     }
 
     private fun dumb() {

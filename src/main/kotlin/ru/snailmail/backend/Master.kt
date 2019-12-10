@@ -77,8 +77,7 @@ object Master {
 
     fun deleteMessage(user: User, messageId: UID) {
         transaction {
-            val msg = Data.findMessageById(messageId)
-                ?: throw IllegalArgumentException("No such message with given id")
+            val msg = Data.findMessageById(messageId) ?: throw IllegalArgumentException("No such message with given id")
             if (msg.from != user.userID)
                 throw IllegalAccessException("Message does not belong to the specified user")
             Data.deleteMessage(messageId)

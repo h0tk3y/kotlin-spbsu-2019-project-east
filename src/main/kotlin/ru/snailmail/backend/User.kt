@@ -1,5 +1,6 @@
 package ru.snailmail.backend
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import io.ktor.auth.Principal
 
 data class Contact(val ownerID: UID, var userId: UID, var preferredName: String, var isBlocked: Boolean)
