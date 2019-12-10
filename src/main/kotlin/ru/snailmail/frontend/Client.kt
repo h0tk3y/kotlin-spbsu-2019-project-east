@@ -19,10 +19,11 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.HttpURLConnection.HTTP_OK
+import java.net.HttpURLConnection.HTTP_UNAUTHORIZED
 import java.net.URL
 import java.net.URLEncoder
 
-private val objectMapper = jacksonObjectMapper().registerModule(KotlinModule(nullToEmptyCollection = true))
+private val objectMapper = jacksonObjectMapper()
 
 class Client {
 
@@ -58,14 +59,12 @@ class Client {
 
     fun logIn(creds: UserPasswordCredential) : String? {
         val outputBytes = objectMapper.writeValueAsBytes(creds)
-        var res = "Logged in as ${creds.name}"
-
         try {
             token = sendPostRequest("login", outputBytes)
         } catch (e : IllegalArgumentException) {
             throw e
         }
-        return res
+        return "Logged in as ${creds.name}"
     }
 
     fun sendMessage(chatId: UID, text: String): String? {
@@ -80,14 +79,13 @@ class Client {
     }
 
     fun createPublicChat(name: String) {
-        if (!::user.isInitialized) {
-            throw IllegalAccessException("Not registered")
-        }
-        Master.createPublicChat(user, name)
+        val outputBytes = objectMapper.writeValueAsBytes(CreatePublicChatRequest(name))
+        sendPostRequest("createPublicChat", outputBytes)
     }
 
-    fun inviteUser(c: PublicChat, user: User) {
-        Master.inviteUser(this.user, c, user)
+    fun inviteUser(chatID: UID, userID: UID) {
+        val outputBytes = objectMapper.writeValueAsBytes(InviteMemberRequest(chatID, userID))
+        sendPostRequest("inviteMember", outputBytes)
     }
 
     fun addToContacts() {
@@ -127,7 +125,18 @@ class Client {
 
             outputStream.write(outputBytes)
 
-            if (responseCode != HTTP_OK) throw IllegalArgumentException(readResponse(errorStream))
+            if (responseCode == HTTP_UNAUTHORIZED) {
+                throw IllegalArgumentException("Unauthorized")
+            }
+
+            if (responseCode != HTTP_OK) {
+                val res: String = if (errorStream == null) {
+                    "Error"
+                } else {
+                    readResponse(errorStream)
+                }
+                throw IllegalArgumentException(res)
+            }
 
             response = readResponse(inputStream)
 
