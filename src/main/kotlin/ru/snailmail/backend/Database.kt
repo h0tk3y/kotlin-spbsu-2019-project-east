@@ -1,7 +1,12 @@
 package ru.snailmail.backend
 
+import org.h2.util.DateTimeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDate
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 import java.util.Date
 
 object Data {
@@ -194,8 +199,10 @@ object Data {
         }.select {
             MessagesToChats.chatId eq chId.id
         }.map {
+            val timeInstant = ZonedDateTime.parse(it[Messages.time],
+                DateTimeFormatter.ofPattern( "E MMM d HH:mm:ss z uuuu" )).toInstant()
             Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
-                it[Messages.edited], Date(it[Messages.time]))
+                it[Messages.edited], Date.from(timeInstant))
         }
 
     fun findLichkaByMembers(userId1: UID, userId2: UID): UID? =

@@ -142,10 +142,10 @@ fun Application.module() {
             post("/showMessages") {
                 requestData<ShowMessageRequest>({params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    if (!Master.findChatMembers(params.chatId).contains(user)) {
+                    if (!Master.findChatMembers(params.chatId).map{it.userID.id}.contains(user.userID.id)) {
                         throw DoesNotExistException("User not in the chat")
                     }
-                    call.respond(Master.findChatMessages(params.chatId).map { it.text })
+                    call.respond(Master.findChatMessages(params.chatId))
                 }, call)
             }
             post("/deleteMessage") {

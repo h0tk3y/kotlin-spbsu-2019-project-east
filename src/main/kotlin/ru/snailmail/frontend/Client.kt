@@ -52,17 +52,19 @@ class Client {
         val outputBytes = objectMapper.writeValueAsBytes("")
         val rawResponse = sendPostRequest("chats", outputBytes)
 
-//        rawResponse ?: return emptyList()
+//        rawResponse ?: return null
 //        val response : List<Chat> = objectMapper.readValue(rawResponse)
         return rawResponse
     }
 
-    fun getChatMessages(chatId: UID) : String? {
+    fun getChatMessages(chatId: UID) : List<Message>? {
         val outputBytes = objectMapper.writeValueAsBytes(ShowMessageRequest(chatId))
-        println(ShowMessageRequest(chatId))
+
         val rawResponse = sendPostRequest("showMessages", outputBytes)
-        println(rawResponse)
-        return rawResponse
+        rawResponse ?: return null
+
+        val response: List<Message> = objectMapper.readValue(rawResponse)
+        return response
     }
 
     fun register(creds: UserPasswordCredential) : String?{

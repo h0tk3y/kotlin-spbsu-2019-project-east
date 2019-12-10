@@ -62,12 +62,12 @@ class ConsoleApp {
     }
 
     private fun getChatMessages() {
-        val n :Int?  = readLine()?.toInt()
+        val n : Long?  = readLine()?.toLong()
         if (n == null) {
             println("Incorrect input")
             return
         }
-        client.getChatMessages(UID(n.toLong()))
+        println(client.getChatMessages(UID(n)))
     }
 
     private fun logout() {
