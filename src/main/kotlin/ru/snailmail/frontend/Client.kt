@@ -1,22 +1,15 @@
 package ru.snailmail.frontend
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.Gson
 import ru.snailmail.backend.*
 
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.jackson.JacksonConverter
-import io.ktor.jackson.jackson
-import kotlinx.css.input
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.HttpURLConnection.HTTP_OK
 import java.net.HttpURLConnection.HTTP_UNAUTHORIZED
@@ -52,9 +45,11 @@ class Client {
         val outputBytes = objectMapper.writeValueAsBytes("")
         val rawResponse = sendPostRequest("chats", outputBytes)
 
+
 //        rawResponse ?: return null
 //        val response : List<Chat> = objectMapper.readValue(rawResponse)
         return rawResponse
+
     }
 
     fun getChatMessages(chatId: UID) : List<Message>? {
@@ -87,9 +82,8 @@ class Client {
         return sendPostRequest("sendMessage", outputBytes)
     }
 
-    //change interface (enter friend's name)
-    fun createLichka(friendId: UID) {
-        val outputBytes = objectMapper.writeValueAsBytes(CreateLichkaRequest(friendId))
+    fun createLichka(friendLogin: String) {
+        val outputBytes = objectMapper.writeValueAsBytes(CreateLichkaRequest(friendLogin))
         sendPostRequest("createLichka", outputBytes)
     }
 
@@ -101,6 +95,18 @@ class Client {
     fun inviteUser(chatID: UID, userID: UID) {
         val outputBytes = objectMapper.writeValueAsBytes(InviteMemberRequest(chatID, userID))
         sendPostRequest("inviteMember", outputBytes)
+    }
+
+    fun getContacts() : List<Contact> {
+        val outputBytes = objectMapper.writeValueAsBytes("")
+        val rawResponse = sendPostRequest("contacts", outputBytes)
+        rawResponse ?: return emptyList()
+        return objectMapper.readValue(rawResponse)
+    }
+
+    fun addContact(userID : UID) {
+        val outputBytes = objectMapper.writeValueAsBytes(AddOrDeleteContactRequest(userID))
+        sendPostRequest("addContact", outputBytes)
     }
 
     fun addToContacts() {

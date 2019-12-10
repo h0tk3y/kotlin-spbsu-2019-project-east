@@ -1,6 +1,5 @@
 package ru.snailmail.backend
 
-import org.h2.util.DateTimeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
@@ -148,9 +147,11 @@ object Data {
     }
 
     fun addContact(ownId: UID, otherId: UID) {
+        val userToAdd = findUserById(otherId) ?: throw IllegalArgumentException("Wrong ID")
         Contacts.insert {
             it[ownerId] = ownId.id
             it[userId] = otherId.id
+            it[preferredName] = userToAdd.name
             it[isBlocked] = false
         }
     }
