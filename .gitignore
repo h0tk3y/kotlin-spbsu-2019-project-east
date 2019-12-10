@@ -2,4 +2,4 @@
 !/.gitignore
 build/
 out/
-testdb.mv.db
+*.db
