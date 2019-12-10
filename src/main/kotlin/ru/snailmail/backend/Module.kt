@@ -180,14 +180,16 @@ fun Application.module() {
             }
             post("/blockUser") {
                 requestData<BlockOrUnblockUserRequest>({params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException("User not found")
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw IllegalArgumentException("User not found")
                     Master.blockUser(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)
             }
             post("/unblockUser") {
                 requestData<BlockOrUnblockUserRequest>({params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException("User not found")
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw IllegalArgumentException("User not found")
                     Master.unblockUser(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)

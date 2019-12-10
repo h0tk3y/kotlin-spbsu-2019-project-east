@@ -1,5 +1,6 @@
 package ru.snailmail.backend
 
+import kotlinx.css.pre
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.Date
@@ -143,9 +144,11 @@ object Data {
     }
 
     fun addContact(ownId: UID, otherId: UID) {
+        val userToAdd = findUserById(otherId) ?: throw IllegalArgumentException("Wrong ID")
         Contacts.insert {
             it[ownerId] = ownId.id
             it[userId] = otherId.id
+            it[preferredName] = userToAdd.name
             it[isBlocked] = false
         }
     }
