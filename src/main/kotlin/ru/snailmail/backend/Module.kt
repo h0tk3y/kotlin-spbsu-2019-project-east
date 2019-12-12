@@ -20,30 +20,32 @@ import kotlin.IllegalArgumentException
 
 private val objectMapper = jacksonObjectMapper()
 
-data class CreateLichkaRequest(val invitedLogin: String)
+interface Request
 
-data class SendMessageRequest(val chatId: UID, val text: String)
+data class CreateLichkaRequest(val invitedLogin: String) : Request
 
-data class DeleteMessageRequest(val chatId: UID, val messageId: UID)
+data class SendMessageRequest(val chatId: UID, val text: String) : Request
 
-data class ShowMessageRequest(val chatId: UID)
+data class DeleteMessageRequest(val chatId: UID, val messageId: UID) : Request
 
-data class CreatePublicChatRequest(val chatName: String)
+data class ShowMessageRequest(val chatId: UID) : Request
 
-data class InviteMemberRequest(val chatId: UID, val invitedId: UID)
+data class CreatePublicChatRequest(val chatName: String) : Request
 
-data class ChangeNameRequest(val userId: UID, val newName: String)
+data class InviteMemberRequest(val chatId: UID, val invitedId: UID) : Request
 
-data class BlockOrUnblockUserRequest(val userId: UID)
+data class ChangeNameRequest(val userId: UID, val newName: String) : Request
 
-data class AddOrDeleteContactRequest(val userId: UID)
+data class BlockOrUnblockUserRequest(val userId: UID) : Request
 
-suspend inline fun <reified T : Any> requestData(f : (T, UserIdPrincipal) -> Unit, call : ApplicationCall) {
+data class AddOrDeleteContactRequest(val userId: UID) : Request
+
+suspend inline fun <reified T : Any> requestData(f: (T, UserIdPrincipal) -> Unit, call: ApplicationCall) {
     try {
         val params = call.receive<T>()
         val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
         f(params, principal)
-    } catch (e : Exception) {
+    } catch (e: Exception) {
         call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
     }
 }
@@ -101,7 +103,7 @@ fun Application.module() {
                 val uid = Master.logIn(creds)
                 val user = Master.findUserById(uid)
                 val token = JwtConfig.makeToken(uid, creds)
-                call.respond("$token$${ objectMapper.writeValueAsString(user)}")
+                call.respond("$token$${objectMapper.writeValueAsString(user)}")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
             }
@@ -113,18 +115,18 @@ fun Application.module() {
                         ?: throw IllegalArgumentException("No user ${params.invitedLogin}")
                     val fstUser = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
                     val id = Master.createLichka(fstUser, sndUser)
-                    call.respondText("$id")
+                    call.respond(id)
                 }, call)
             }
             post("/createPublicChat") {
-                requestData<CreatePublicChatRequest>({params, principal ->
+                requestData<CreatePublicChatRequest>({ params, principal ->
                     val owner = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
                     val chatId = Master.createPublicChat(owner, params.chatName)
-                    call.respondText("PublicChatId: $chatId\n")
+                    call.respond(chatId)
                 }, call)
             }
             post("/inviteMember") {
-                requestData<InviteMemberRequest>({params, principal ->
+                requestData<InviteMemberRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val invited = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
@@ -133,7 +135,7 @@ fun Application.module() {
                 }, call)
             }
             post("/sendMessage") {
-                requestData<SendMessageRequest>({params, principal ->
+                requestData<SendMessageRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
                     Master.sendMessage(user, chat, params.text)
@@ -146,22 +148,21 @@ fun Application.module() {
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     val chats = Master.getUserChats(user.userID)
                     call.respond(UnionChatsfromChats(chats))
-//                    call.respond(Master.getUserChats(user.userID))
                    } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
                 }
             }
             post("/showMessages") {
-                requestData<ShowMessageRequest>({params, principal ->
+                requestData<ShowMessageRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    if (!Master.findChatMembers(params.chatId).map{it.userID.id}.contains(user.userID.id)) {
+                    if (!Master.findChatMembers(params.chatId).map { it.userID.id }.contains(user.userID.id)) {
                         throw DoesNotExistException("User not in the chat")
                     }
                     call.respond(Master.findChatMessages(params.chatId))
                 }, call)
             }
             post("/deleteMessage") {
-                requestData<DeleteMessageRequest>({params, principal ->
+                requestData<DeleteMessageRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteMessage(user, params.messageId)
                     call.respond("OK")
@@ -177,14 +178,14 @@ fun Application.module() {
                 }
             }
             post("/changeContactName") {
-                requestData<ChangeNameRequest>({params, principal ->
+                requestData<ChangeNameRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.changePreferredName(user.userID, params.userId, params.newName)
                     call.respondText("OK")
                 }, call)
             }
             post("/blockUser") {
-                requestData<BlockOrUnblockUserRequest>({params, principal ->
+                requestData<BlockOrUnblockUserRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name)
                         ?: throw IllegalArgumentException("User not found")
                     Master.blockUser(user.userID, params.userId)
@@ -192,7 +193,7 @@ fun Application.module() {
                 }, call)
             }
             post("/unblockUser") {
-                requestData<BlockOrUnblockUserRequest>({params, principal ->
+                requestData<BlockOrUnblockUserRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name)
                         ?: throw IllegalArgumentException("User not found")
                     Master.unblockUser(user.userID, params.userId)
@@ -200,14 +201,14 @@ fun Application.module() {
                 }, call)
             }
             post("/addContact") {
-                requestData<AddOrDeleteContactRequest>({params, principal ->
+                requestData<AddOrDeleteContactRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.addContact(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)
             }
             post("/deleteContact") {
-                requestData<AddOrDeleteContactRequest>({params, principal ->
+                requestData<AddOrDeleteContactRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteContact(user.userID, params.userId)
                     call.respondText("OK")
