@@ -205,7 +205,11 @@ class ConsoleApp {
     }
 
     private fun getChats() {
-        println(client.getChats())
+        try {
+            println(client.getChats())
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
     }
 
     private fun dumb() {

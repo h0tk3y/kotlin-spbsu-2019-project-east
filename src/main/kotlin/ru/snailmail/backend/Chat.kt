@@ -1,10 +1,6 @@
 package ru.snailmail.backend
 
 import com.fasterxml.jackson.annotation.JsonBackReference
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import java.lang.IllegalArgumentException
 
 
 abstract class Chat(val chatID: UID) {
@@ -20,4 +16,15 @@ class Lichka(private val chatId: UID, private val first : User, private val seco
 
     fun getFirstUser(): User = first
     fun getSecondUser(): User = second
+}
+
+data class UnionChat(var chatId: UID, var name: String) {
+    constructor(chat: Chat) : this(chat.chatID, "lateinit") {
+        if (chat is Lichka) {
+            this.name = chat.getFirstUser().name + " with " + chat.getSecondUser().name
+        }
+        if (chat is PublicChat) {
+            this.name = chat.name
+        }
+    }
 }

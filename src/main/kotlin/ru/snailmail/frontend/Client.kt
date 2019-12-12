@@ -48,13 +48,12 @@ class Client {
         return response
     }
 
-    fun getChats() : String? {
+    fun getChats() : List<UnionChat> {
         val outputBytes = objectMapper.writeValueAsBytes("")
         val rawResponse = sendPostRequest("chats", outputBytes)
-
-//        rawResponse ?: return null
-//        val response : List<Chat> = objectMapper.readValue(rawResponse)
-        return rawResponse
+        rawResponse ?: return emptyList()
+        val response : List<UnionChat> = objectMapper.readValue(rawResponse)
+        return response
     }
 
     fun getChatMessages(chatId: UID) : List<Message>? {
