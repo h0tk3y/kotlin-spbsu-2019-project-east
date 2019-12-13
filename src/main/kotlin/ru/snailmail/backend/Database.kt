@@ -1,6 +1,7 @@
 package ru.snailmail.backend
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -165,44 +166,56 @@ object Data {
 
     fun findMessageById(id: UID): Message? =
         Messages.select { Messages.id eq id.id }.singleOrNull()?.let {
-            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
-                it[Messages.edited], Date(it[Messages.time]))
+            Message(
+                UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
+                it[Messages.edited], Date(it[Messages.time])
+            )
+        }
+
+    fun getUserPublicChats(uId: UID): List<PublicChat> =
+        Join(
+            Join(PublicChats, ChatsToUsers, JoinType.INNER, PublicChats.chatId, ChatsToUsers.chatId, additionalConstraint = {
+                ChatsToUsers.userId eq uId.id
+            }),
+            Users, JoinType.INNER, PublicChats.owner, Users.userId
+        ).selectAll().map {
+            PublicChat(UID(it[PublicChats.chatId]), it[PublicChats.name],
+                User(it[Users.name], it[Users.passwordHash], UID(it[Users.userId])))
+        }
+
+    fun getUserLichkas(uId: UID): List<Lichka> =
+        Join(Users,
+            Join(Lichkas, ChatsToUsers, JoinType.INNER, Lichkas.chatId, ChatsToUsers.chatId, additionalConstraint = {
+                ChatsToUsers.userId eq uId.id
+            }),
+            JoinType.INNER,
+            null, null, additionalConstraint = {
+                (Users.userId eq Lichkas.fstId) or (Users.userId eq Lichkas.sndId)
+            }
+        ).selectAll().groupBy { it[Lichkas.chatId] }.map {
+            Lichka(UID(it.key),
+                User(it.value[0][Users.name], it.value[0][Users.passwordHash], UID(it.value[0][Users.userId])),
+                User(it.value[1][Users.name], it.value[1][Users.passwordHash], UID(it.value[1][Users.userId]))
+            )
         }
 
     fun getUserChats(uId: UID): List<Chat> =
-        PublicChats.join(ChatsToUsers, JoinType.INNER, null, null) {
-            PublicChats.chatId eq ChatsToUsers.chatId
-        }.select {
-            ChatsToUsers.userId eq uId.id
-        }.map { // TODO: fix this shit
-                PublicChat(UID(it[PublicChats.chatId]), it[PublicChats.name], findUserById(UID(it[PublicChats.owner]))!!)
-            }.plus(Lichkas.join(ChatsToUsers, JoinType.INNER, null, null) {
-                Lichkas.chatId eq ChatsToUsers.chatId
-            }.select {
-                ChatsToUsers.userId eq uId.id
-            }.map { // TODO: fix this shit
-                Lichka(UID(it[Lichkas.chatId]), findUserById(UID(it[Lichkas.fstId]))!!, findUserById(UID(it[Lichkas.sndId]))!!)
-            }
-            ) // TODO: sort by time
+        getUserPublicChats(uId).plus(getUserLichkas(uId))
 
     fun findChatMembers(chId: UID): List<User> =
-        Users.join(ChatsToUsers, JoinType.INNER, null, null) {
-            Users.userId eq ChatsToUsers.userId
-        }.select {
+        Join(Users, ChatsToUsers, JoinType.INNER, Users.userId, ChatsToUsers.userId, additionalConstraint = {
             ChatsToUsers.chatId eq chId.id
-        }.map { User(it[Users.name], it[Users.passwordHash], UID(it[Users.userId])) }
+        }).selectAll().map { User(it[Users.name], it[Users.passwordHash], UID(it[Users.userId])) }
 
     fun findChatMessages(chId: UID): List<Message> =
-        Messages.join(MessagesToChats, JoinType.INNER, null, null) {
-            Messages.id eq MessagesToChats.messageId
-        }.select {
+        Join(Messages, MessagesToChats, JoinType.INNER, Messages.id, MessagesToChats.messageId, additionalConstraint = {
             MessagesToChats.chatId eq chId.id
-        }.map {
+        }).selectAll().map {
             val timeInstant = ZonedDateTime.parse(it[Messages.time],
                 DateTimeFormatter.ofPattern( "E MMM d HH:mm:ss z uuuu" )).toInstant()
             Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
                 it[Messages.edited], Date.from(timeInstant))
-        }
+        }.sortedBy { it.time }
 
     fun findLichkaByMembers(userId1: UID, userId2: UID): UID? =
         Lichkas.select {
