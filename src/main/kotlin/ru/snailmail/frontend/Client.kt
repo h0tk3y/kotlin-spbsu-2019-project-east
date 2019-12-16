@@ -50,7 +50,7 @@ class Client {
     }
 
     fun getChatMessages(chatId: UID) : List<Message>? {
-        val outputBytes = objectMapper.writeValueAsBytes(ShowMessageRequest(chatId))
+        val outputBytes = objectMapper.writeValueAsBytes(ChatRequest(chatId))
         var rawResponse :String? = null
         try {
             rawResponse = sendPostRequest("showMessages", outputBytes)
