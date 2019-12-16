@@ -33,7 +33,7 @@ class Client {
         return sendGetRequest("")
     }
 
-    //remove later
+    // TODO: remove later
     fun getUsers() : List<User>{
         val rawResponse = sendGetRequest("users")
         rawResponse ?: return emptyList()
