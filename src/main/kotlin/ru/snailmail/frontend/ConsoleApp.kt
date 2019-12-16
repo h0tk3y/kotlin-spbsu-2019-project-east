@@ -31,12 +31,6 @@ class ConsoleApp {
             if (loggedIn()) {
                 when (answer) {
                     "-h" -> help()
-                    "login" -> {
-                        login()
-                    }
-                    "register" -> {
-                        register()
-                    }
                     "users" -> {
                         getUsers()
                     }
@@ -235,7 +229,7 @@ class ConsoleApp {
         val userID = readLine()
         try {
             client.inviteUser(UID(chatID?.toLong() ?: 0), UID(userID?.toLong() ?: 0))
-            println("Member invited\n")
+            println("Member invited")
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -245,9 +239,10 @@ class ConsoleApp {
         try {
             val chats = client.getChats()
             if (chats.isEmpty()) {
-                println("You haven't got anybody to chat with\n")
+                println(ANSI_CYAN + "You haven't got anybody to chat with" + ANSI_RESET)
                 return
             }
+            println(ANSI_BLUE + "Your chats:" + ANSI_RESET)
             for (chat in chats) {
                 println(chat.name + " ID = " + chat.chatId.id)
             }
@@ -261,9 +256,10 @@ class ConsoleApp {
         try {
             contacts = client.getContacts()
             if (contacts.isEmpty()) {
-                println("You haven't got friends")
+                println(ANSI_CYAN + "You haven't got friends" + ANSI_RESET)
                 return
             }
+            println(ANSI_BLUE + "Your contacts:" + ANSI_RESET)
             for (contact in contacts) {
                 println(contact.preferredName + " ID = " + contact.userId.id)
             }
