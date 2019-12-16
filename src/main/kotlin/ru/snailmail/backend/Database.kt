@@ -272,6 +272,22 @@ object Data {
             it[isBlocked] = false
         } > 0
 
+    fun searchInMessages(userId: UID, text: String): List<Message> =
+        Join(Messages,
+            Join(MessagesToChats, ChatsToUsers, JoinType.INNER, MessagesToChats.chatId, ChatsToUsers.chatId,
+                additionalConstraint = { ChatsToUsers.userId eq userId.id }),
+            JoinType.INNER,
+            Messages.id,
+            MessagesToChats.messageId
+        ).selectAll().filter {
+            it[Messages.text].contains(text)
+        }.map {
+            val timeInstant = ZonedDateTime.parse(it[Messages.time],
+                DateTimeFormatter.ofPattern( "E MMM d HH:mm:ss z uuuu" )).toInstant()
+            Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text],
+                it[Messages.deleted], it[Messages.edited], Date.from(timeInstant))
+        }
+
     fun init() {
         SchemaUtils.create(Users)
         SchemaUtils.create(Contacts)

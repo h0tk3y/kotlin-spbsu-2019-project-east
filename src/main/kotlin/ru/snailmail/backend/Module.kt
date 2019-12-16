@@ -32,6 +32,8 @@ data class EditMessageRequest(val messageId: UID, val text: String) : Request
 
 data class ChatRequest(val chatId: UID) : Request
 
+data class SearchInMessagesRequest(val userId: UID, val substring: String) : Request
+
 data class CreatePublicChatRequest(val chatName: String) : Request
 
 data class InviteMemberRequest(val chatId: UID, val invitedId: UID) : Request
@@ -229,6 +231,13 @@ fun Application.module() {
                         ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.unblockUser(user.userID, params.userId)
                     call.respondText("OK")
+                }, call)
+            }
+            post("/searchInMessages") {
+                requestData<SearchInMessagesRequest>({ params, principal ->
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
+                    call.respond(Master.searchInMessages(user, params.substring))
                 }, call)
             }
             post("/addContact") {
