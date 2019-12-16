@@ -142,6 +142,9 @@ object Master {
         }
     }
 
+    fun searchInMessages(user: User, text: String) =
+        transaction { Data.searchInMessages(user.userID, text) }
+
     fun findChatById(id: UID): Chat? =
         transaction { Data.findChatById(id) }
 
