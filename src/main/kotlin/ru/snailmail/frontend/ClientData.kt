@@ -3,21 +3,22 @@ package ru.snailmail.frontend
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
-import ru.snailmail.backend.Data
 import ru.snailmail.backend.Message
 import ru.snailmail.backend.UID
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
-class ClientData {
-    object Users : Table() {
-        val userId = long("id").primaryKey()
-        val name = varchar("name", length = 50).primaryKey()
-        val passwordHash = integer("passwordHash")
-    }
+fun dateFromString(date : String) : Date {
+    val timeInstant = ZonedDateTime.parse(date,
+        DateTimeFormatter.ofPattern( "E MMM d HH:mm:ss z uuuu" )).toInstant()
+    return Date.from(timeInstant)
+}
 
+object ClientData {
     object Messages : Table() {
         val id = long("id").primaryKey()
-        val from = reference("from", Users.userId)
+        val from = long("from")
         val text = varchar("text", length=100)
         val deleted = bool("deleted")
         val edited = bool("edited")
@@ -25,38 +26,61 @@ class ClientData {
         // TODO: add attachments.
     }
 
+    object Chats : Table() {
+        val id = long("id").primaryKey()
+    }
+
+    object MessagesToChats : Table() {
+        val chatId = reference("chatId", Chats.id)
+        val messageId = reference("messageId", Messages.id)
+    }
+
     fun addMessage(chId: UID, m: Message) {
-        Data.Messages.insert {
-            it[id] = m.id.id
-            it[text] = m.text
-            it[from] = m.from.id
-            it[deleted] = m.deleted
-            it[edited] = m.edited
-            it[time] = m.time.toString()
+        if (Messages.select { Messages.id eq m.id.id }.empty()) {
+            Messages.insert {
+                it[id] = m.id.id
+                it[text] = m.text
+                it[from] = m.from.id
+                it[deleted] = m.deleted
+                it[edited] = m.edited
+                it[time] = m.time.toString()
+            }
+            MessagesToChats.insert {
+                it[chatId] = chId.id
+                it[messageId] = m.id.id
+            }
         }
-        Data.MessagesToChats.insert {
-            it[chatId] = chId.id
-            it[messageId] = m.id.id
+    }
+
+    fun addChat(uid : UID) {
+        if (Chats.select { Chats.id eq uid.id }.empty()) {
+            Chats.insert {
+                it[id] = uid.id
+            }
         }
     }
 
     fun findMessageById(id: UID): Message? =
-        Data.Messages.select { Data.Messages.id eq id.id }.singleOrNull()?.let {
+        Messages.select { Messages.id eq id.id }.singleOrNull()?.let {
             Message(
-                UID(it[Data.Messages.id]), UID(it[Data.Messages.from]), it[Data.Messages.text], it[Data.Messages.deleted],
-                it[Data.Messages.edited], Date(it[Data.Messages.time])
+                UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
+                it[Messages.edited], dateFromString(it[Messages.time])
             )
         }
 
 
     fun init() {
-        SchemaUtils.create(Users)
         SchemaUtils.create(Messages)
+        SchemaUtils.create(Chats)
+        SchemaUtils.create(MessagesToChats)
     }
 
     fun clear() {
         transaction {
-            Users.deleteAll()
+            MessagesToChats.deleteAll()
+//            SchemaUtils.drop(Chats, MessagesToChats, Messages)
+            Chats.deleteAll()
+            Messages.deleteAll()
         }
     }
 }

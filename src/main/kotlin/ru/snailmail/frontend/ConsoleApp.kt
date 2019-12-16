@@ -81,6 +81,9 @@ class ConsoleApp {
                     "register" -> {
                         register()
                     }
+                    "exit" -> {
+                        flag = false
+                    }
                     else -> println("Sign in or register, type -h for help")
                 }
             }

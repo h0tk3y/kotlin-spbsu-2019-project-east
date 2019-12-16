@@ -7,6 +7,12 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
+fun dateFromString(date : String) : Date {
+    val timeInstant = ZonedDateTime.parse(date,
+        DateTimeFormatter.ofPattern( "E MMM d HH:mm:ss z uuuu" )).toInstant()
+    return Date.from(timeInstant)
+}
+
 object Data {
     object Users : Table() {
         val userId = long("id").primaryKey()
@@ -171,7 +177,7 @@ object Data {
         Messages.select { Messages.id eq id.id }.singleOrNull()?.let {
             Message(
                 UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
-                it[Messages.edited], Date(it[Messages.time])
+                it[Messages.edited], dateFromString(it[Messages.time])
             )
         }
 
@@ -214,10 +220,8 @@ object Data {
         Join(Messages, MessagesToChats, JoinType.INNER, Messages.id, MessagesToChats.messageId, additionalConstraint = {
             MessagesToChats.chatId eq chId.id
         }).selectAll().map {
-            val timeInstant = ZonedDateTime.parse(it[Messages.time],
-                DateTimeFormatter.ofPattern( "E MMM d HH:mm:ss z uuuu" )).toInstant()
             Message(UID(it[Messages.id]), UID(it[Messages.from]), it[Messages.text], it[Messages.deleted],
-                it[Messages.edited], Date.from(timeInstant))
+                it[Messages.edited], dateFromString(it[Messages.time]))
         }.sortedBy { it.time }
 
     fun findLichkaByMembers(userId1: UID, userId2: UID): UID? =

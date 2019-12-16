@@ -21,6 +21,10 @@ import java.net.URLEncoder
 private val objectMapper = jacksonObjectMapper()
 
 class Client {
+    private val connection = Database.connect(
+        "jdbc:h2:./clientDB",
+        driver = "org.h2.Driver"
+    )
 
     var token : String? = null
 
@@ -63,6 +67,10 @@ class Client {
         rawResponse ?: return null
 
         val response: List<Message> = objectMapper.readValue(rawResponse)
+        transaction {
+            ClientData.addChat(chatId)
+            response.forEach { ClientData.addMessage(chatId, it) }
+        }
         return response
     }
 
@@ -72,29 +80,20 @@ class Client {
     }
 
     fun connectDB() {
-        val connection = Database.connect(
-            "jdbc:h2:./clientDB",
-            driver = "org.h2.Driver"
-        )
         transaction(connection) {
-            ClientData().init()
+            ClientData.init()
         }
-        println("Connected!")
     }
 
     fun clearDB() {
-        val connection = Database.connect(
-            "jdbc:h2:./clientDB",
-            driver = "org.h2.Driver"
-        )
         transaction(connection) {
-            ClientData().clear()
+            ClientData.clear()
         }
-        println("Disconnected!")
     }
 
     fun logIn(creds: UserPasswordCredential) : String? {
         val outputBytes = objectMapper.writeValueAsBytes(creds)
+        clearDB()
         connectDB()
         try {
             val responce = sendPostRequest("login", outputBytes)
@@ -140,7 +139,7 @@ class Client {
 
     private fun sendGetRequest(param: String) : String? {
 
-        var reqParam = URLEncoder.encode(param, "UTF-8")
+        val reqParam = URLEncoder.encode(param, "UTF-8")
         val mURL = URL("http://127.0.0.1:8080/$reqParam")
 
         lateinit
