@@ -1,9 +1,11 @@
 package ru.snailmail.frontend
 
 import io.ktor.auth.UserPasswordCredential
+import ru.snailmail.backend.Chat
 import ru.snailmail.backend.Contact
 import ru.snailmail.backend.Message
 import ru.snailmail.backend.UID
+import java.lang.Exception
 
 const val ANSI_RESET = "\u001B[0m"
 const val ANSI_BLACK = "\u001B[30m"
@@ -24,7 +26,11 @@ class ConsoleApp {
     fun runner() {
 
         var flag = true
-        println(client.greetings())
+        try {
+            println(client.greetings())
+        } catch (e : Exception) {
+            println("Bad connection")
+        }
 
         while (flag) {
             val answer = readLine()
@@ -107,6 +113,14 @@ class ConsoleApp {
         println()
     }
 
+    private fun chatPrettyPrint(chat : Chat) {
+        println(chat.javaClass)
+    }
+
+    private fun chatsPrettyPrint() {
+
+    }
+
     private fun getChatMessages() {
         println("Enter chat Id")
         val n : Long?  = readLine()?.toLong()
@@ -150,7 +164,7 @@ class ConsoleApp {
         println("Enter your name: ")
         val name = readLine()
         println("Enter your password: ")
-        val pass = readLine()
+        val pass = (System.console()?.readPassword() ?: readLine())?.toString()
         try {
             println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
             println("User $name signed up!")
