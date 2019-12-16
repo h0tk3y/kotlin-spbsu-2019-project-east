@@ -28,72 +28,98 @@ class ConsoleApp {
 
         while (flag) {
             val answer = readLine()
-            when (answer) {
-                "-h" -> help()
-                "login" -> {
-                    login()
+            if (loggedIn()) {
+                when (answer) {
+                    "-h" -> help()
+                    "login" -> {
+                        login()
+                    }
+                    "register" -> {
+                        register()
+                    }
+                    "users" -> {
+                        getUsers()
+                    }
+                    "create lichka" -> {
+                        createLichka()
+                    }
+                    "create chat" -> {
+                        createPublicChat()
+                    }
+                    "invite member" -> {
+                        inviteMember()
+                    }
+                    "send message" -> {
+                        sendMessage()
+                    }
+                    "get chats" -> {
+                        getChats()
+                    }
+                    "get chat messages" -> {
+                        getChatMessages()
+                    }
+                    "get contacts" -> {
+                        getContacts()
+                    }
+                    "add contact" -> {
+                        addContact()
+                    }
+                    "exit" -> {
+                        flag = false
+                    }
+                    "logout" -> {
+                        logout()
+                    }
+                    else -> dumb()
                 }
-                "register" -> {
-                    register()
+            } else {
+                when (answer) {
+                    "-h" -> help()
+                    "login" -> {
+                        login()
+                    }
+                    "register" -> {
+                        register()
+                    }
+                    else -> println("Sign in or register, type -h for help")
                 }
-                "users" -> {
-                    getUsers()
-                }
-                "create lichka" -> {
-                    createLichka()
-                }
-                "create chat" -> {
-                    createPublicChat()
-                }
-                "invite member" -> {
-                    inviteMember()
-                }
-                "send message" -> {
-                    sendMessage()
-                }
-                "get chats" -> {
-                    getChats()
-                }
-                "get chat messages" -> {
-                    getChatMessages()
-                }
-                "get contacts" -> {
-                    getContacts()
-                }
-                "add contact" -> {
-                    addContact()
-                }
-                "exit" -> {
-                    flag = false
-                }
-                "logout" -> {
-                    logout()
-                }
-                else -> dumb()
             }
         }
     }
 
-    private fun help() {
-        print(
-            "Possible commands:\n" +
-                    "\tlogin          Залогиниться\n" +
-                    "\tregister       Зарегистрироваться\n" +
-                    "\tcreate lichka   Создать диалог\n" +
-                    "\tsend message     Послать сообщение\n" +
-                    "\tget chats    Список чатов\n" +
-                    "\tget chat messages    Сообщения чата\n" +
-                    "\tlogout\n" +
-                    "\texit\n" +
-                    "\tcreate chat    Создать беседу\n" +
-                    "\tinvite member  Пригласить в беседу\n" +
-                    "\tget contacts   Посмотреть контакты\n" +
-                    "\tadd contact    Добавить контакт\n"
+    private fun loggedIn() : Boolean{
+        return client.token != null
+    }
 
-        )
+    private fun help() {
+        if (loggedIn()) {
+            print(
+                "Possible commands:\n" +
+                        "\tlogin                Залогиниться\n" +
+                        "\tregister             Зарегистрироваться\n" +
+                        "\tcreate lichka        Создать диалог\n" +
+                        "\tsend message         Послать сообщение\n" +
+                        "\tget chats            Список чатов\n" +
+                        "\tget chat messages    Сообщения чата\n" +
+                        "\tcreate chat          Создать беседу\n" +
+                        "\tinvite member        Пригласить в беседу\n" +
+                        "\tget contacts         Посмотреть контакты\n" +
+                        "\tadd contact          Добавить контакт\n" +
+                        "\tlogout\n" +
+                        "\texit\n"
+            )
+        } else {
+            print(
+                "Possible commands:\n" +
+                        "\tlogin                Залогиниться\n" +
+                        "\tregister             Зарегистрироваться\n" +
+                        "\texit\n"
+            )
+        }
     }
 
     private fun messagePrettyPrint(msg : Message) {
+        client.token ?: return
         val from = client.getUsers().find { it.userID == msg.from }
         if (from!!.userID == client.user.userID) {
             println("\t\t" + msg.time)
@@ -108,6 +134,7 @@ class ConsoleApp {
     }
 
     private fun getChatMessages() {
+        client.token ?: return
         println("Enter chat Id")
         val n : Long?  = readLine()?.toLong()
         if (n == null) {
@@ -140,7 +167,7 @@ class ConsoleApp {
         println("Enter your password: ")
         val pass = readLine()
         try {
-            println(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
+            print(client.logIn(UserPasswordCredential(name ?: "", pass ?: "")))
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -152,7 +179,7 @@ class ConsoleApp {
         println("Enter your password: ")
         val pass = readLine()
         try {
-            println(client.register(UserPasswordCredential(name ?: "", pass ?: "")))
+            client.register(UserPasswordCredential(name ?: "", pass ?: ""))
             println("User $name signed up!")
         } catch (e: IllegalArgumentException) {
             println(e.message)
@@ -184,7 +211,7 @@ class ConsoleApp {
         println("Enter message:")
         val text = readLine()
         try {
-            println(client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: ""))
+            client.sendMessage(UID(chatId?.toLong() ?: 0), text ?: "")
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -207,7 +234,8 @@ class ConsoleApp {
         println("Enter user ID:")
         val userID = readLine()
         try {
-            println(client.inviteUser(UID(chatID?.toLong() ?: 0), UID(userID?.toLong() ?: 0)))
+            client.inviteUser(UID(chatID?.toLong() ?: 0), UID(userID?.toLong() ?: 0))
+            println("Member invited\n")
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -215,7 +243,14 @@ class ConsoleApp {
 
     private fun getChats() {
         try {
-            println(client.getChats())
+            val chats = client.getChats()
+            if (chats.isEmpty()) {
+                println("You haven't got anybody to chat with\n")
+                return
+            }
+            for (chat in chats) {
+                println(chat.name + " ID = " + chat.chatId.id)
+            }
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
@@ -230,7 +265,7 @@ class ConsoleApp {
                 return
             }
             for (contact in contacts) {
-                println(contact.preferredName)
+                println(contact.preferredName + " ID = " + contact.userId.id)
             }
         } catch (e: IllegalArgumentException) {
             println(e.message)
@@ -241,7 +276,8 @@ class ConsoleApp {
         println("Enter contact's id:")
         val userID = readLine()
         try {
-            println(client.addContact(UID(userID?.toLong() ?: 0)))
+            client.addContact(UID(userID?.toLong() ?: 0))
+            println("Contact added")
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }

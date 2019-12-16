@@ -77,7 +77,7 @@ class Client {
         } catch (e : IllegalArgumentException) {
             throw e
         }
-        return "Logged in as ${creds.name}"
+        return "Logged in as ${creds.name}\n"
     }
 
     fun sendMessage(chatId: UID, text: String): String? {
