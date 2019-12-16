@@ -89,8 +89,6 @@ class ConsoleApp {
         if (loggedIn()) {
             print(
                 "Possible commands:\n" +
-                        "\tlogin                Залогиниться\n" +
-                        "\tregister             Зарегистрироваться\n" +
                         "\tcreate lichka        Создать диалог\n" +
                         "\tsend message         Послать сообщение\n" +
                         "\tget chats            Список чатов\n" +
@@ -113,7 +111,6 @@ class ConsoleApp {
     }
 
     private fun messagePrettyPrint(msg : Message) {
-        client.token ?: return
         val from = client.getUsers().find { it.userID == msg.from }
         if (from!!.userID == client.user.userID) {
             println("\t\t" + msg.time)
@@ -128,7 +125,6 @@ class ConsoleApp {
     }
 
     private fun getChatMessages() {
-        client.token ?: return
         println("Enter chat Id")
         val n : Long?  = readLine()?.toLong()
         if (n == null) {
@@ -152,7 +148,7 @@ class ConsoleApp {
     }
 
     private fun login() {
-        if (client.token != null) {
+        if (loggedIn()) {
             println("You are already logged in!")
             return
         }
