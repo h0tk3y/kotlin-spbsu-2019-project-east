@@ -7,6 +7,8 @@ import ru.snailmail.backend.*
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -26,6 +28,7 @@ class Client {
         private set
 
     fun logout() {
+        clearDB()
         token = null
     }
 
@@ -68,8 +71,31 @@ class Client {
         return sendPostRequest("register", outputBytes) //returns Json {UserId}
     }
 
+    fun connectDB() {
+        val connection = Database.connect(
+            "jdbc:h2:./clientDB",
+            driver = "org.h2.Driver"
+        )
+        transaction(connection) {
+            ClientData().init()
+        }
+        println("Connected!")
+    }
+
+    fun clearDB() {
+        val connection = Database.connect(
+            "jdbc:h2:./clientDB",
+            driver = "org.h2.Driver"
+        )
+        transaction(connection) {
+            ClientData().clear()
+        }
+        println("Disconnected!")
+    }
+
     fun logIn(creds: UserPasswordCredential) : String? {
         val outputBytes = objectMapper.writeValueAsBytes(creds)
+        connectDB()
         try {
             val responce = sendPostRequest("login", outputBytes)
             token = responce?.split('$')!![0]
