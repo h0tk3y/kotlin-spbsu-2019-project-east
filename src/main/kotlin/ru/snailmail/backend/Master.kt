@@ -133,8 +133,20 @@ object Master {
         }
     }
 
+    fun logOutOfChat(chatMember: User, chat: PublicChat) {
+        transaction {
+            if (!Data.userInChat(chatMember.userID, chat.chatId)) {
+                throw IllegalAccessException("User not in the chat")
+            }
+            Data.deleteUserFromChat(chatMember.userID, chat.chatId)
+        }
+    }
+
     fun findChatById(id: UID): Chat? =
         transaction { Data.findChatById(id) }
+
+    fun findPublicChatById(id: UID): PublicChat? =
+        transaction { Data.findPublicChatById(id) }
 
     fun findMessageById(id: UID): Message? =
         transaction { Data.findMessageById(id) }

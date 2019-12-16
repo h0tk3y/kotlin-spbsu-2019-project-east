@@ -30,7 +30,7 @@ data class DeleteMessageRequest(val messageId: UID) : Request
 
 data class EditMessageRequest(val messageId: UID, val text: String) : Request
 
-data class ShowMessageRequest(val chatId: UID) : Request
+data class ChatRequest(val chatId: UID) : Request
 
 data class CreatePublicChatRequest(val chatName: String) : Request
 
@@ -115,31 +115,38 @@ fun Application.module() {
                 requestData<CreateLichkaRequest>({ params, principal ->
                     val sndUser = Master.findUserByLogin(params.invitedLogin)
                         ?: throw IllegalArgumentException("No user ${params.invitedLogin}")
-                    val fstUser = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
+                    val fstUser = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     val id = Master.createLichka(fstUser, sndUser)
                     call.respond(id)
                 }, call)
             }
             post("/createPublicChat") {
                 requestData<CreatePublicChatRequest>({ params, principal ->
-                    val owner = Master.findUserByLogin(principal.name) ?: throw DoesNotExistException()
+                    val owner = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     val chatId = Master.createPublicChat(owner, params.chatName)
                     call.respond(chatId)
                 }, call)
             }
             post("/inviteMember") {
                 requestData<InviteMemberRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    val invited = Master.findUserById(params.invitedId) ?: throw IllegalArgumentException()
-                    val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
+                    val invited = Master.findUserById(params.invitedId)
+                        ?: throw DoesNotExistException("No user ${params.invitedId}")
+                    val chat = Master.findChatById(params.chatId)
+                        ?: throw DoesNotExistException("No chat ${params.chatId}")
                     Master.inviteUser(user, chat as PublicChat, invited)
                     call.respondText("OK")
                 }, call)
             }
             post("/sendMessage") {
                 requestData<SendMessageRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
-                    val chat = Master.findChatById(params.chatId) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
+                    val chat = Master.findChatById(params.chatId)
+                        ?: throw DoesNotExistException("No chat ${params.chatId}")
                     Master.sendMessage(user, chat, params.text)
                     call.respondText("OK")
                 }, call)
@@ -147,7 +154,8 @@ fun Application.module() {
             post("/chats") {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     val chats = Master.getUserChats(user.userID)
                     call.respond(UnionChatsfromChats(chats))
                    } catch (e: Exception) {
@@ -155,32 +163,45 @@ fun Application.module() {
                 }
             }
             post("/showMessages") {
-                requestData<ShowMessageRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                requestData<ChatRequest>({ params, principal ->
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     if (!Master.findChatMembers(params.chatId).map { it.userID.id }.contains(user.userID.id)) {
-                        throw DoesNotExistException("User not in the chat")
+                        throw DoesNotExistException("User ${principal.name} not in the chat ${params.chatId}")
                     }
                     call.respond(Master.findChatMessages(params.chatId))
                 }, call)
             }
             post("/deleteMessage") {
                 requestData<DeleteMessageRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.deleteMessage(user, params.messageId)
                     call.respond("OK")
                 }, call)
             }
             post("/editMessage") {
                 requestData<EditMessageRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.editMessage(user, params.messageId, params.text)
                     call.respond("OK")
+                }, call)
+            }
+            post("/logOutOfChat") {
+                requestData<ChatRequest>({ params, principal ->
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
+                    val chat = Master.findPublicChatById(params.chatId)
+                        ?: throw DoesNotExistException("No chat ${params.chatId}")
+                    Master.logOutOfChat(user, chat)
                 }, call)
             }
             post("/contacts") {
                 try {
                     val principal = call.principal<UserIdPrincipal>() ?: error("No Principal")
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     call.respond(Master.getUserContacts(user.userID))
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "error: ".plus(e.message))
@@ -188,7 +209,8 @@ fun Application.module() {
             }
             post("/changeContactName") {
                 requestData<ChangeNameRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.changePreferredName(user.userID, params.userId, params.newName)
                     call.respondText("OK")
                 }, call)
@@ -196,7 +218,7 @@ fun Application.module() {
             post("/blockUser") {
                 requestData<BlockOrUnblockUserRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name)
-                        ?: throw IllegalArgumentException("User not found")
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.blockUser(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)
@@ -204,21 +226,23 @@ fun Application.module() {
             post("/unblockUser") {
                 requestData<BlockOrUnblockUserRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name)
-                        ?: throw IllegalArgumentException("User not found")
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.unblockUser(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)
             }
             post("/addContact") {
                 requestData<AddOrDeleteContactRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.addContact(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)
             }
             post("/deleteContact") {
                 requestData<AddOrDeleteContactRequest>({ params, principal ->
-                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    val user = Master.findUserByLogin(principal.name)
+                        ?: throw DoesNotExistException("No user ${principal.name}")
                     Master.deleteContact(user.userID, params.userId)
                     call.respondText("OK")
                 }, call)

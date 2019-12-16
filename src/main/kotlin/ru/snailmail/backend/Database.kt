@@ -145,6 +145,9 @@ object Data {
         }
     }
 
+    fun deleteUserFromChat(uId: UID, chId: UID): Boolean =
+        ChatsToUsers.deleteWhere { (ChatsToUsers.chatId eq chId.id) and (ChatsToUsers.userId eq uId.id) } > 0
+
     fun addContact(ownId: UID, otherId: UID) {
         val userToAdd = findUserById(otherId) ?: throw IllegalArgumentException("Wrong ID")
         Contacts.insert {
@@ -223,15 +226,21 @@ object Data {
                     ((Lichkas.fstId eq userId2.id) and (Lichkas.sndId eq userId1.id))
         }.singleOrNull()?.let { UID(it[Lichkas.chatId]) }
 
-    fun findChatById(id: UID): Chat? =
+    fun findPublicChatById(id: UID): PublicChat? =
+        PublicChats.select { (PublicChats.chatId eq id.id) }.singleOrNull()?.let {
+            val owner = findUserById(UID(it[PublicChats.owner])) ?: return null
+            PublicChat(id, it[PublicChats.name], owner)
+        }
+
+    fun findLichkaById(id: UID): Lichka? =
         Lichkas.select { (Lichkas.chatId eq id.id) }.singleOrNull()?.let {
             val fst = findUserById(UID(it[Lichkas.fstId])) ?: return null
             val snd = findUserById(UID(it[Lichkas.sndId])) ?: return null
             Lichka(id, fst, snd)
-        } ?: PublicChats.select { (PublicChats.chatId eq id.id) }.singleOrNull()?.let {
-            val owner = findUserById(UID(it[PublicChats.owner])) ?: return null
-            PublicChat(id, it[PublicChats.name], owner)
         }
+
+    fun findChatById(id: UID): Chat? =
+        findLichkaById(id) ?: findPublicChatById(id)
 
     fun deleteMessage(msgId: UID): Boolean =
         Messages.update({ Messages.id eq msgId.id }) {
