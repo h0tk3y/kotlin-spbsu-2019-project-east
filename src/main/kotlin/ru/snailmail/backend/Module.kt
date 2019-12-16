@@ -26,7 +26,9 @@ data class CreateLichkaRequest(val invitedLogin: String) : Request
 
 data class SendMessageRequest(val chatId: UID, val text: String) : Request
 
-data class DeleteMessageRequest(val chatId: UID, val messageId: UID) : Request
+data class DeleteMessageRequest(val messageId: UID) : Request
+
+data class EditMessageRequest(val messageId: UID, val text: String) : Request
 
 data class ShowMessageRequest(val chatId: UID) : Request
 
@@ -165,6 +167,13 @@ fun Application.module() {
                 requestData<DeleteMessageRequest>({ params, principal ->
                     val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
                     Master.deleteMessage(user, params.messageId)
+                    call.respond("OK")
+                }, call)
+            }
+            post("/editMessage") {
+                requestData<EditMessageRequest>({ params, principal ->
+                    val user = Master.findUserByLogin(principal.name) ?: throw IllegalArgumentException()
+                    Master.editMessage(user, params.messageId, params.text)
                     call.respond("OK")
                 }, call)
             }

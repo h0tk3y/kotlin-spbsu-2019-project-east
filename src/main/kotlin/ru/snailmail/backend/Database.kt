@@ -239,6 +239,12 @@ object Data {
             it[text] = ""
         } > 0
 
+    fun editMessage(msgId: UID, newText: String): Boolean =
+        Messages.update({ Messages.id eq msgId.id }) {
+            it[edited] = true
+            it[text] = newText
+        } > 0
+
     fun deleteContact(ownerId: UID, otherId: UID): Boolean =
         Contacts.deleteWhere { (Contacts.ownerId eq ownerId.id) and (Contacts.userId eq otherId.id) } > 0
 
