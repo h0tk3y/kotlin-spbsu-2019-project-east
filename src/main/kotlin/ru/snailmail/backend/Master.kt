@@ -32,14 +32,14 @@ object Master {
         if (creds.name == "") {
             throw IllegalArgumentException("Empty login")
         }
-        val id = UIDGenerator.generateID()
-        transaction {
+        return transaction {
             if (Data.findUserByLogin(creds.name) != null) {
                 throw AlreadyExistsException("User with login ${creds.name} already exists")
             }
+            val id = UIDGenerator.generateID()
             Data.addUser(id.id, creds.name, hash(creds.password, id))
+            id
         }
-        return id
     }
 
     fun logIn(creds: UserPasswordCredential): UID =
@@ -56,7 +56,6 @@ object Master {
             if (!Data.userInChat(user.userID, c.chatID)) {
                 throw DoesNotExistException("User not in the chat")
             }
-            val id = UIDGenerator.generateID()
             if (c is Lichka) {
                 val fstUsr = c.getFirstUser()
                 val sndUsr = c.getSecondUser()
@@ -71,6 +70,7 @@ object Master {
                     }
                 }
             }
+            val id = UIDGenerator.generateID()
             Data.addMessage(c.chatID, Message(id, user.userID, text))
             id
         }
