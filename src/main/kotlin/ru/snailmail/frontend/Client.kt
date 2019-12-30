@@ -32,7 +32,7 @@ class Client {
         private set
 
     fun logout() {
-//        clearDB()
+        clearDB()
         token = null
     }
 
@@ -67,10 +67,10 @@ class Client {
         rawResponse ?: return null
 
         val response: List<Message> = objectMapper.readValue(rawResponse)
-//        transaction {
-//            ClientData.addChat(chatId)
-//            response.forEach { ClientData.addMessage(chatId, it) }
-//        }
+        transaction {
+            ClientData.addChat(chatId)
+            response.forEach { ClientData.addMessage(chatId, it) }
+        }
         return response
     }
 
@@ -93,8 +93,8 @@ class Client {
 
     fun logIn(creds: UserPasswordCredential) : String? {
         val outputBytes = objectMapper.writeValueAsBytes(creds)
-        //clearDB()
-        //connectDB()
+        if (::user.isInitialized) clearDB()
+        connectDB()
         try {
             val responce = sendPostRequest("login", outputBytes)
             token = responce?.split('$')!![0]

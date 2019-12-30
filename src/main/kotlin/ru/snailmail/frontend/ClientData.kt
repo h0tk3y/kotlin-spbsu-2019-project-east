@@ -78,7 +78,6 @@ object ClientData {
     fun clear() {
         transaction {
             MessagesToChats.deleteAll()
-//            SchemaUtils.drop(Chats, MessagesToChats, Messages)
             Chats.deleteAll()
             Messages.deleteAll()
         }
