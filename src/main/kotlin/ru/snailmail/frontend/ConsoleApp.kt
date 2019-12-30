@@ -23,6 +23,7 @@ fun main() {
 
 class ConsoleApp {
     private val client = Client()
+    private var curChatId: Long = -1
     fun runner() {
 
         var flag = true
@@ -34,57 +35,41 @@ class ConsoleApp {
 
         while (flag) {
             val answer = readLine()
-            if (loggedIn()) {
+            if (loggedIn() and (curChatId < 0)) {
                 when (answer) {
                     "-h" -> help()
-                    "users" -> {
-                        getUsers()
-                    }
-                    "create lichka" -> {
-                        createLichka()
-                    }
-                    "create chat" -> {
-                        createPublicChat()
-                    }
-                    "invite member" -> {
-                        inviteMember()
-                    }
-                    "send message" -> {
-                        sendMessage()
-                    }
-                    "get chats" -> {
-                        getChats()
-                    }
-                    "get chat messages" -> {
-                        getChatMessages()
-                    }
-                    "get contacts" -> {
-                        getContacts()
-                    }
-                    "add contact" -> {
-                        addContact()
-                    }
-                    "exit" -> {
-                        flag = false
-                    }
-                    "logout" -> {
-                        logout()
-                    }
+                    "users" -> getUsers()
+                    "create lichka" -> createLichka()
+                    "create chat" -> createPublicChat()
+                    "invite member" -> inviteMember()
+                    "send message" -> sendMessage()
+                    "get chats" -> getChats()
+                    "get chat messages" -> getChatMessages()
+                    "get contacts" -> getContacts()
+                    "add contact" -> addContact()
+                    "exit" -> flag = false
+                    "logout" -> logout()
+                    "enter chat" -> enterChat()
                     else -> dumb()
+                }
+            } else if (curChatId < 0){
+                when (answer) {
+                    "-h" -> help()
+                    "login" -> login()
+                    "register" -> register()
+                    "exit" -> flag = false
+                    else -> println("Sign in or register, type -h for help")
                 }
             } else {
                 when (answer) {
-                    "-h" -> help()
-                    "login" -> {
-                        login()
-                    }
-                    "register" -> {
-                        register()
-                    }
-                    "exit" -> {
-                        flag = false
-                    }
-                    else -> println("Sign in or register, type -h for help")
+                    "-h" -> println(
+                                "\t-r     refresh chat\n" +
+                                "\t-exit  exit chat\n" +
+                                "\tother input would be send to this chat as message"
+                    )
+                    "-r" -> refreshChat()
+                    "-exit" -> exitChat()
+                    else -> sendCurMessage(answer ?: "")
                 }
             }
         }
@@ -107,6 +92,7 @@ class ConsoleApp {
                         "\tget contacts         Посмотреть контакты\n" +
                         "\tadd contact          Добавить контакт\n" +
                         "\tlogout\n" +
+                        "\tenter chat           Зайти в чат\n" +
                         "\texit\n"
             )
         } else {
@@ -157,6 +143,7 @@ class ConsoleApp {
             println("No messages yet")
         }
         msgs.forEach { messagePrettyPrint(it) }
+        print("Your message: ")
     }
 
     private fun logout() {
@@ -287,6 +274,41 @@ class ConsoleApp {
         try {
             client.addContact(UID(userID?.toLong() ?: 0))
             println("Contact added")
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
+        }
+    }
+
+    private fun enterChat() {
+        println("Enter chat ID:")
+        curChatId = readLine()?.toLong() ?: -1
+        if (curChatId < 0) {
+            println("Wrong Id")
+        } else {
+            refreshChat()
+        }
+    }
+
+    private fun refreshChat() {
+        val msgs = client.getChatMessages(UID(curChatId))
+        if (msgs == null) {
+            println("Something went wrong...")
+            return
+        }
+        if (msgs.isEmpty()) {
+            println("No messages yet")
+        }
+        msgs.forEach { messagePrettyPrint(it) }
+    }
+
+    private fun exitChat() {
+        curChatId = -1
+        println("You are in the main menu now")
+    }
+
+    private fun sendCurMessage(msg: String) {
+        try {
+            client.sendMessage(UID(curChatId), msg)
         } catch (e: IllegalArgumentException) {
             println(e.message)
         }
