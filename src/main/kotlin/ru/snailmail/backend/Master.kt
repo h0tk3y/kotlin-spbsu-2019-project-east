@@ -8,12 +8,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main(args: Array<String>) {
     val connection = Database.connect(
-        "jdbc:h2:./testdb",
+        "jdbc:h2:/opt/snailmail/data/testdb",
         driver = "org.h2.Driver"
     )
 
     transaction(connection) {
-        Data.clear()
         Data.init()
     }
     val server = embeddedServer(Netty, port = 8080) {

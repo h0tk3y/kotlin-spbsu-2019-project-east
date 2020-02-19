@@ -1,0 +1,13 @@
+version: '2'
+services:
+  snailmail:
+    image: ogps.registry.jetbrains.space/snailmail-east/server:local_build
+    ports:
+      - 9090:8080
+    restart: always
+    command: "/opt/snailmail/bin/snailmail"
+    volumes:
+      - snailmail-east:/opt/snailmail/data
+
+volumes:
+  snailmail-east:

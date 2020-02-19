@@ -293,14 +293,16 @@ object Data {
         }
 
     fun init() {
-        SchemaUtils.create(Users)
-        SchemaUtils.create(Contacts)
-        SchemaUtils.create(Chats)
-        SchemaUtils.create(Lichkas)
-        SchemaUtils.create(PublicChats)
-        SchemaUtils.create(ChatsToUsers)
-        SchemaUtils.create(Messages)
-        SchemaUtils.create(MessagesToChats)
+        SchemaUtils.createMissingTablesAndColumns(
+            Users,
+            Contacts,
+            Chats,
+            Lichkas,
+            PublicChats,
+            ChatsToUsers,
+            Messages,
+            MessagesToChats
+        )
     }
 
     fun clear() {
