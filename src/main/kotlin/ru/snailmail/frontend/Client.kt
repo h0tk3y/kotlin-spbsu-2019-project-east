@@ -19,6 +19,7 @@ import java.net.URL
 import java.net.URLEncoder
 
 private val objectMapper = jacksonObjectMapper()
+private val url = "http://130.193.44.108:9090"
 
 class Client {
     private val connection = Database.connect(
@@ -140,7 +141,7 @@ class Client {
     private fun sendGetRequest(param: String) : String? {
 
         val reqParam = URLEncoder.encode(param, "UTF-8")
-        val mURL = URL("http://127.0.0.1:8080/$reqParam")
+        val mURL = URL("$url/$reqParam")
 
         lateinit
         var response:String
@@ -153,7 +154,7 @@ class Client {
 
     private fun sendPostRequest(addr:String, outputBytes:ByteArray) : String?{
 
-        val url = URL("http://127.0.0.1:8080/$addr")
+        val url = URL("$url/$addr")
 
         lateinit
         var response:String
